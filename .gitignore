@@ -1,0 +1,6 @@
+*build*
+*.cache*
+*.nsys-rep
+*.log
+*.vscode*
+
