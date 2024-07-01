@@ -13,19 +13,19 @@ namespace cu
 #define cuda_fn inline constexpr __device__
 
 template<typename T>
-cuda_fn cu::tangent<T> operator+(cu::tangent<T> a, cu::tangent<T> b)
+cuda_fn tangent<T> operator+(tangent<T> a, tangent<T> b)
 {
     return { .v = a.v + b.v, .d = a.d + b.d };
 }
 
 template<typename T>
-cuda_fn cu::tangent<T> operator*(cu::tangent<T> a, cu::tangent<T> b)
+cuda_fn tangent<T> operator*(tangent<T> a, tangent<T> b)
 {
     return { .v = a.v * b.v, .d = a.v * b.d + a.d * b.v };
 }
 
 template<typename T>
-cuda_fn cu::tangent<T> max(cu::tangent<T> a, cu::tangent<T> b)
+cuda_fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
     using std::max;
 
@@ -34,7 +34,7 @@ cuda_fn cu::tangent<T> max(cu::tangent<T> a, cu::tangent<T> b)
 }
 
 template<typename T>
-cuda_fn cu::tangent<T> min(cu::tangent<T> a, cu::tangent<T> b)
+cuda_fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
     using std::min;
 
@@ -43,7 +43,7 @@ cuda_fn cu::tangent<T> min(cu::tangent<T> a, cu::tangent<T> b)
 }
 
 template<typename T>
-cuda_fn cu::tangent<T> mid(cu::tangent<T> v, cu::tangent<T> lb, cu::tangent<T> ub)
+cuda_fn tangent<T> mid(tangent<T> v, tangent<T> lb, tangent<T> ub)
 {
     return { .v = mid(v.v, lb.v, ub.v), .d = lb.d * (v.v < lb.v) + ub.d * (v.v > ub.v) };
 }
