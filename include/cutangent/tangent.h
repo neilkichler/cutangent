@@ -9,11 +9,12 @@ namespace cu
 template<typename T>
 struct tangent
 {
-    T v;
-    T d;
+    T v; // value
+    T d; // derivative
 
     constexpr auto operator<=>(const tangent &) const = default;
 };
+
 
 } // namespace cu
 
