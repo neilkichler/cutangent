@@ -60,6 +60,15 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
 }
 
 template<typename T>
+fn tangent<T> abs(tangent<T> x)
+{
+    using std::abs;
+    using std::copysign;
+    // NOTE: not differentiable at x = 0.
+    return { .v = abs(x.v), .d = copysign(1.0, x.v) * x.d };
+}
+
+template<typename T>
 fn tangent<T> clamp(tangent<T> v, tangent<T> lb, tangent<T> ub)
 {
     using std::clamp;
