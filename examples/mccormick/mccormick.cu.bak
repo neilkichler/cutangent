@@ -1,0 +1,164 @@
+#include "../common.h"
+
+#include <cuda_runtime.h>
+
+#include <cumccormick/cumccormick.cuh>
+#include <cumccormick/format.h>
+
+#include <cutangent/cutangent.cuh>
+#include <cutangent/format.h>
+
+#include <iostream>
+
+using cu::tangent;
+
+template<typename T>
+using mc = cu::mccormick<T>;
+
+#if 1
+constexpr auto f(auto x, auto y)
+{
+    // auto a = x * y;
+    // auto b = x - y;
+    // auto c = x * y;
+    // auto d = x / y;
+    // auto a = pown(x, 2);
+    auto a = sqr(x);
+    return a;
+}
+
+__global__ void kernel(tangent<mc<double>> *xs, tangent<mc<double>> *ys, tangent<mc<double>> *res, int n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        res[i] = f(xs[i], ys[i]);
+    }
+}
+
+int main()
+{
+    constexpr int n = 1;
+    using T         = tangent<mc<double>>;
+    T xs[n], ys[n], res[n];
+
+    // generate dummy data
+    // for (int i = 0; i < n; i++) {
+    //     double v = i;
+    //     double w = n - i;
+    //     xs[i]    = { .v = { .cv = -v, .cc = v, .box = { .lb = -v, .ub = v } },
+    //                  .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+    //     ys[i]    = { .v = { .cv = -w, .cc = w, .box = { .lb = -w, .ub = w } },
+    //                  .d = { .cv = 0.0, .cc = 0.0, .box = { .lb = 0.0, .ub = 0.0 } } };
+    // }
+
+    xs[0] = { .v = { .cv = 2.0, .cc = 2.0, .box = { .lb = 0.5, .ub = 3.0 } },
+              .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+    ys[0] = { .v = { .cv = 3.0, .cc = 3.0, .box = { .lb = 2.0, .ub = 5.0 } },
+              .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+
+
+
+    // xs[0] = { .v = { .cv = 2.0, .cc = 2.0, .box = { .lb = 0.0, .ub = 3.0 } },
+    //           .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+    // ys[0] = { .v = { .cv = 3.0, .cc = 3.0, .box = { .lb = 2.0, .ub = 5.0 } },
+    //           .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+
+    std::cout << xs[0] << std::endl;
+    std::cout << ys[0] << std::endl;
+
+    T *d_xs, *d_ys, *d_res;
+    CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
+    CUDA_CHECK(cudaMalloc(&d_ys, n * sizeof(*ys)));
+    CUDA_CHECK(cudaMalloc(&d_res, n * sizeof(*res)));
+
+    CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_ys, ys, n * sizeof(*ys), cudaMemcpyHostToDevice));
+
+    kernel<<<n, 1>>>(d_xs, d_ys, d_res, n);
+
+    CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
+
+    auto r = res[0];
+    std::cout << r << std::endl;
+
+    CUDA_CHECK(cudaFree(d_xs));
+    CUDA_CHECK(cudaFree(d_ys));
+    CUDA_CHECK(cudaFree(d_res));
+
+    return 0;
+}
+
+#else
+constexpr auto f(auto x, auto y)
+{
+    auto a = x * y;
+    return a;
+}
+
+__global__ void kernel(mc<tangent<double>> *xs, mc<tangent<double>> *ys, mc<tangent<double>> *res, int n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        res[i] = f(xs[i], ys[i]);
+    }
+}
+
+int main()
+{
+    constexpr int n = 1;
+    using T         = mc<tangent<double>>;
+    T xs[n], ys[n], res[n];
+
+    // generate dummy data
+    // for (int i = 0; i < n; i++) {
+    //     double v = i;
+    //     double w = n - i;
+    //     xs[i]    = { .v = { .cv = -v, .cc = v, .box = { .lb = -v, .ub = v } },
+    //                  .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+    //     ys[i]    = { .v = { .cv = -w, .cc = w, .box = { .lb = -w, .ub = w } },
+    //                  .d = { .cv = 0.0, .cc = 0.0, .box = { .lb = 0.0, .ub = 0.0 } } };
+    // }
+
+    xs[0] = { .cv  = { .v = 2.0, .d = 1.0 },
+              .cc  = { .v = 2.0, .d = 1.0 },
+              .box = { .lb = { .v = 0.0, .d = 1.0 },
+                       .ub = { .v = 3.0, .d = 1.0 } } };
+
+    ys[0] = { .cv  = { .v = 3.0, .d = 1.0 },
+              .cc  = { .v = 3.0, .d = 1.0 },
+              .box = { .lb = { .v = 2.0, .d = 1.0 },
+                       .ub = { .v = 5.0, .d = 1.0 } } };
+
+
+
+    // xs[0] = { .v = { .cv = 2.0, .cc = 2.0, .box = { .lb = 0.0, .ub = 3.0 } },
+    //           .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+    // ys[0] = { .v = { .cv = 3.0, .cc = 3.0, .box = { .lb = 2.0, .ub = 5.0 } },
+    //           .d = { .cv = 1.0, .cc = 1.0, .box = { .lb = 1.0, .ub = 1.0 } } };
+
+    std::cout << xs[0] << std::endl;
+    std::cout << ys[0] << std::endl;
+
+    T *d_xs, *d_ys, *d_res;
+    CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
+    CUDA_CHECK(cudaMalloc(&d_ys, n * sizeof(*ys)));
+    CUDA_CHECK(cudaMalloc(&d_res, n * sizeof(*res)));
+
+    CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_ys, ys, n * sizeof(*ys), cudaMemcpyHostToDevice));
+
+    kernel<<<n, 1>>>(d_xs, d_ys, d_res, n);
+
+    CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
+
+    auto r = res[0];
+    std::cout << r << std::endl;
+
+    CUDA_CHECK(cudaFree(d_xs));
+    CUDA_CHECK(cudaFree(d_ys));
+    CUDA_CHECK(cudaFree(d_res));
+
+    return 0;
+}
+
+#endif
