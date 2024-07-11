@@ -237,6 +237,22 @@ fn bool isnan(tangent<T> a)
     return isnan(a.v) or isnan(a.d);
 }
 
+template<typename T>
+fn tangent<T> remquo(tangent<T> x, tangent<T> y, int *quo)
+{
+    using std::remquo;
+
+    return { remquo(x.v, y.v, quo), 0.0 };
+}
+
+template<typename T>
+fn bool signbit(tangent<T> x)
+{
+    using std::signbit;
+
+    return signbit(x.v);
+}
+
 #undef fn
 
 } // namespace cu

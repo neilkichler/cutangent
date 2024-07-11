@@ -34,13 +34,14 @@ constexpr auto f(auto x, auto y)
     // auto a = exp(x);
     // auto a = log(x);
     // auto a = recip(x);
+    auto a = cos(x);
     // auto a = pown(x, 3);
     // auto a = pown(x, 4);
     // auto a = pow(x, 4);
     // auto a = pow(x, y); // not yet supported by McCormick
     // auto a = max(x, y);
     // auto a = min(x, y);
-    auto a = hull(x, y);
+    // auto a = hull(x, y);
     return a;
 }
 

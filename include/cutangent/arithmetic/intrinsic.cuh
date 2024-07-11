@@ -21,7 +21,7 @@ namespace cu::intrinsic
     template<typename T> inline __device__ T min       (T x, T y);
     template<typename T> inline __device__ T max       (T x, T y);
     template<typename T> inline __device__ T copy_sign (T x, T y);
-    template<typename T> inline __device__ T next_after(T x, T y);
+    template<typename T, typename U> inline __device__ T next_after(T x, U y);
     template<typename T> inline __device__ T rcp_down  (T x);
     template<typename T> inline __device__ T rcp_up    (T x);
     template<typename T> inline __device__ T sqrt_down (T x);
@@ -56,7 +56,7 @@ namespace cu::intrinsic
     // template<> inline __device__ double min       (double x, double y) { return fmin(x, y); }
     // template<> inline __device__ double max       (double x, double y) { return fmax(x, y); }
     // template<> inline __device__ double copy_sign (double x, double y) { return copysign(x, y); }
-    template<> inline __device__ tangent<double> next_after(tangent<double> x, tangent<double> y) { return { nextafter(x.v, y.v), x.d }; }
+    template<> inline __device__ tangent<double> next_after(tangent<double> x, tangent<double> y) { using std::nextafter; return { nextafter(x.v, y.v), x.d }; }
     template<> inline __device__ tangent<double> rcp_down  (tangent<double> x) { using std::pow; return { __drcp_rd(x.v), - __dmul_rd(pow(x.v, -2.0), x.d) }; }
     template<> inline __device__ tangent<double> rcp_up    (tangent<double> x) { using std::pow; return { __drcp_ru(x.v), - __dmul_ru(pow(x.v, -2.0), x.d) }; }
     template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { return sqrt(x); }
