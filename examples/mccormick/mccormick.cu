@@ -2,8 +2,6 @@
 
 #include <cuda_runtime.h>
 
-#include <cuinterval/arithmetic/intrinsic.cuh>
-
 #include <cumccormick/cumccormick.cuh>
 #include <cumccormick/format.h>
 
@@ -57,7 +55,7 @@ int main()
 {
     constexpr int n = 1;
     using T         = mc<tangent<double>>;
-    T xs[n], ys[n], zs[n], res[n];
+    T xs[n], ys[n], res[n];
 
     // generate dummy data
 
@@ -71,10 +69,11 @@ int main()
               .box = { .lb = { 2.0, 0.0 },
                        .ub = { 5.0, 0.0 } } };
 
-    zs[0] = { .cv  = { -3.0, 1.0 },
-              .cc  = { -3.0, 1.0 },
-              .box = { .lb = { -12.0, 0.0 },
-                       .ub = { 5.0, 0.0 } } };
+    // T zs[n];
+    // zs[0] = { .cv  = { -3.0, 1.0 },
+    //           .cc  = { -3.0, 1.0 },
+    //           .box = { .lb = { -12.0, 0.0 },
+    //                    .ub = { 5.0, 0.0 } } };
 
     std::cout << xs[0] << std::endl;
     std::cout << ys[0] << std::endl;
