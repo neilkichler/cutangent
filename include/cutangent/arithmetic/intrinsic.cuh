@@ -57,10 +57,10 @@ namespace cu::intrinsic
     // template<> inline __device__ double max       (double x, double y) { return fmax(x, y); }
     // template<> inline __device__ double copy_sign (double x, double y) { return copysign(x, y); }
     template<> inline __device__ tangent<double> next_after(tangent<double> x, tangent<double> y) { return { nextafter(x.v, y.v), x.d }; }
-    // template<> inline __device__ double rcp_down  (double x)           { return __drcp_rd(x); }
-    // template<> inline __device__ double rcp_up    (double x)           { return __drcp_ru(x); }
-    template<> inline __device__ tangent<double> sqrt_down(tangent<double> x) { return sqrt(x); }
-    template<> inline __device__ tangent<double> sqrt_up  (tangent<double> x) { return sqrt(x); }
+    template<> inline __device__ tangent<double> rcp_down  (tangent<double> x) { using std::pow; return { __drcp_rd(x.v), - __dmul_rd(pow(x.v, -2.0), x.d) }; }
+    template<> inline __device__ tangent<double> rcp_up    (tangent<double> x) { using std::pow; return { __drcp_ru(x.v), - __dmul_ru(pow(x.v, -2.0), x.d) }; }
+    template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { return sqrt(x); }
+    template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { return sqrt(x); }
     // template<> inline __device__ double int_down  (double x)           { return floor(x); }
     // template<> inline __device__ double int_up    (double x)           { return ceil(x); }
     // template<> inline __device__ double trunc     (double x)           { return ::trunc(x); }

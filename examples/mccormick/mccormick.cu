@@ -33,6 +33,7 @@ constexpr auto f(auto x, auto y)
     // auto a = abs(x);
     // auto a = exp(x);
     // auto a = log(x);
+    // auto a = recip(x);
     // auto a = pown(x, 3);
     // auto a = pown(x, 4);
     // auto a = pow(x, 4);
