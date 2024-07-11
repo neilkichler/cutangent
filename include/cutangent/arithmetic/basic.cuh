@@ -25,9 +25,33 @@ fn tangent<T> operator+(tangent<T> a, tangent<T> b)
 }
 
 template<typename T>
+fn tangent<T> operator+(tangent<T> a, T b)
+{
+    return { a.v + b, a.d };
+}
+
+template<typename T>
+fn tangent<T> operator+(T a, tangent<T> b)
+{
+    return { a + b.v, b.d };
+}
+
+template<typename T>
 fn tangent<T> operator-(tangent<T> a, tangent<T> b)
 {
     return { a.v - b.v, a.d - b.d };
+}
+
+template<typename T>
+fn tangent<T> operator-(tangent<T> a, T b)
+{
+    return { a.v - b, a.d };
+}
+
+template<typename T>
+fn tangent<T> operator-(T a, tangent<T> b)
+{
+    return { a - b.v, -b.d };
 }
 
 template<typename T>
@@ -182,11 +206,35 @@ fn tangent<T> pow(tangent<T> x, tangent<T> n)
 }
 
 template<typename T>
+fn tangent<T> ceil(tangent<T> x)
+{
+    using std::ceil;
+
+    return { ceil(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> floor(tangent<T> x)
+{
+    using std::floor;
+
+    return { floor(x.v), 0.0 };
+}
+
+template<typename T>
 fn bool isinf(tangent<T> a)
 {
     using std::isinf;
 
     return isinf(a.v);
+}
+
+template<typename T>
+fn bool isnan(tangent<T> a)
+{
+    using std::isnan;
+
+    return isnan(a.v) or isnan(a.d);
 }
 
 #undef fn

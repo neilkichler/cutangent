@@ -61,8 +61,8 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> rcp_up    (tangent<double> x) { using std::pow; return { __drcp_ru(x.v), - __dmul_ru(pow(x.v, -2.0), x.d) }; }
     template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { return sqrt(x); }
     template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { return sqrt(x); }
-    // template<> inline __device__ double int_down  (double x)           { return floor(x); }
-    // template<> inline __device__ double int_up    (double x)           { return ceil(x); }
+    template<> inline __device__ tangent<double> int_down  (tangent<double> x) { return floor(x); }
+    template<> inline __device__ tangent<double> int_up    (tangent<double> x) { return ceil(x); }
     // template<> inline __device__ double trunc     (double x)           { return ::trunc(x); }
     // template<> inline __device__ double round_away(double x)           { return round(x); }
     // template<> inline __device__ double round_even(double x)           { return nearbyint(x); }
