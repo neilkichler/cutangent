@@ -24,7 +24,14 @@ struct tangent
         , d { derivative }
     { }
 
-    constexpr auto operator<=>(const tangent &) const = default;
+    // constexpr auto operator<=>(const tangent &) const = default;
+    constexpr auto operator<=>(const tangent &other) const noexcept {
+        return v <=> other.v;
+    }
+
+    constexpr bool operator==(const tangent &other) const noexcept {
+        return v == other.v;
+    }
 };
 
 } // namespace cu
