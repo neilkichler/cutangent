@@ -243,7 +243,7 @@ fn bool isnan(tangent<T> a)
 {
     using std::isnan;
 
-    return isnan(a.v) or isnan(a.d);
+    return isnan(a.v);
 }
 
 template<typename T>
