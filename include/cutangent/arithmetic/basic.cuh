@@ -254,6 +254,14 @@ fn bool signbit(tangent<T> x)
     return signbit(x.v);
 }
 
+template<typename T>
+fn tangent<T> copysign(tangent<T> mag, T sgn)
+{
+    using std::copysign;
+
+    return { copysign(mag.v, sgn), copysign(mag.d, sgn) };
+}
+
 #undef fn
 
 } // namespace cu
