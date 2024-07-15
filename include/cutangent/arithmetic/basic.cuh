@@ -138,6 +138,14 @@ fn tangent<T> cos(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> tan(tangent<T> x)
+{
+    using std::tan;
+
+    return { tan(x.v), static_cast<T>(1.0) + sqr(tan(x.v)) };
+}
+
+template<typename T>
 fn tangent<T> exp(tangent<T> x)
 {
     using std::exp;
