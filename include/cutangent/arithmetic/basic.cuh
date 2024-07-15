@@ -223,11 +223,19 @@ fn tangent<T> floor(tangent<T> x)
 }
 
 template<typename T>
-fn bool isinf(tangent<T> a)
+fn bool isinf(tangent<T> x)
 {
     using std::isinf;
 
-    return isinf(a.v);
+    return isinf(x.v);
+}
+
+template<typename T>
+fn bool isfinite(tangent<T> x)
+{
+    using std::isfinite;
+
+    return isfinite(x.v);
 }
 
 template<typename T>
