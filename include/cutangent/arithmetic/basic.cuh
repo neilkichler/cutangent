@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <numbers>
 
 namespace cu
 {
@@ -172,6 +173,22 @@ fn tangent<T> log(tangent<T> x)
 
     // NOTE: We currently do not treat the case where x.v == 0, x.d != 0 to map to -+inf.
     return { log(x.v), x.d / x.v };
+}
+
+template<typename T>
+fn tangent<T> log2(tangent<T> x)
+{
+    using std::log2;
+
+    return { log2(x.v), x.d / (x.v * std::numbers::ln2_v<T>) };
+}
+
+template<typename T>
+fn tangent<T> log10(tangent<T> x)
+{
+    using std::log10;
+
+    return { log10(x.v), x.d / (x.v * std::numbers::ln10_v<T>) };
 }
 
 template<typename T>
