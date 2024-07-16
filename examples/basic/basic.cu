@@ -28,6 +28,8 @@ constexpr auto f(auto x, auto y)
     auto m = x * 2;
     auto n = log2(x);
     auto o = log10(x);
+    auto p = tan(x);
+    auto q = atan(x);
 
     print(a);
     print(b);
@@ -44,6 +46,8 @@ constexpr auto f(auto x, auto y)
     print(m);
     print(n);
     print(o);
+    print(p);
+    print(q);
     return a;
 }
 

@@ -153,35 +153,39 @@ fn tangent<T> cos(tangent<T> x)
 template<typename T>
 fn tangent<T> tan(tangent<T> x)
 {
+    using std::pow;
     using std::tan;
 
-    return { tan(x.v), static_cast<T>(1.0) + sqr(tan(x.v)) };
+    return { tan(x.v), static_cast<T>(1.0) + pow(tan(x.v), 2) };
 }
 
 template<typename T>
 fn tangent<T> asin(tangent<T> x)
 {
     using std::asin;
+    using std::pow;
     using std::sqrt;
 
-    return { asin(x.v), x.d / sqrt(1.0 - sqr(x.v)) };
+    return { asin(x.v), x.d / sqrt(1.0 - pow(x.v, 2)) };
 }
 
 template<typename T>
 fn tangent<T> acos(tangent<T> x)
 {
     using std::acos;
+    using std::pow;
     using std::sqrt;
 
-    return { acos(x.v), -x.d / sqrt(1.0 - sqr(x.v)) };
+    return { acos(x.v), -x.d / sqrt(1.0 - pow(x.v, 2)) };
 }
 
 template<typename T>
 fn tangent<T> atan(tangent<T> x)
 {
     using std::atan;
+    using std::pow;
 
-    return { atan(x.v), x.d / (1.0 + sqr(x.v)) };
+    return { atan(x.v), x.d / (1.0 + pow(x.v, 2)) };
 }
 
 template<typename T>
@@ -206,7 +210,7 @@ fn tangent<T> log2(tangent<T> x)
 {
     using std::log2;
 
-    return { log2(x.v), x.d / (x.v * std::numbers::ln2_v<T>) };
+    return { log2(x.v), x.d / (x.v * std::numbers::ln2_v<T>)};
 }
 
 template<typename T>
@@ -214,7 +218,7 @@ fn tangent<T> log10(tangent<T> x)
 {
     using std::log10;
 
-    return { log10(x.v), x.d / (x.v * std::numbers::ln10_v<T>) };
+    return { log10(x.v), x.d / (x.v * std::numbers::ln10_v<T>)};
 }
 
 template<typename T>
