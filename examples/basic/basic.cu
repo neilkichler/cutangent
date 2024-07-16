@@ -25,6 +25,7 @@ constexpr auto f(auto x, auto y)
     auto j = exp(x);
     auto k = log(x);
     auto l = pown(x, 2);
+    auto m = x * 2;
 
     print(a);
     print(b);
@@ -38,6 +39,7 @@ constexpr auto f(auto x, auto y)
     print(j);
     print(k);
     print(l);
+    print(m);
     return a;
 }
 

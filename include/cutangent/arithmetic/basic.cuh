@@ -220,6 +220,7 @@ fn tangent<T> pow(auto x, tangent<T> n)
 template<typename T>
 fn tangent<T> pow(tangent<T> x, tangent<T> n)
 {
+    using std::log;
     using std::pow;
 
     return { pow(x.v, n.v),

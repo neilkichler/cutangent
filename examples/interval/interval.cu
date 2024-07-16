@@ -22,7 +22,7 @@ constexpr auto f(auto x, auto y)
     // auto a = neg(x);
     // auto a = add(x, y);
     // auto a = sub(x, y);
-    auto a = mul(x, y);
+    // auto a = mul(x, y);
     // auto a = div(x, y);
     // auto a = x + y;
     // auto a = x - y;
@@ -36,9 +36,9 @@ constexpr auto f(auto x, auto y)
     // auto a = recip(x);
     // auto a = cos(x);
     // auto a = pown(x, 3);
-    // auto a = pown(x, 4);
-    // auto a = pow(x, 4);
-    // auto a = pow(x, y); // not yet supported by McCormick
+    // auto a = pown(x, 4.0);
+    // auto a = pow(x, 4.0);
+    auto a = pow(x, y);
     // auto a = max(x, y);
     // auto a = min(x, y);
     // auto a = hull(x, y);
