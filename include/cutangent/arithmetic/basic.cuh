@@ -159,6 +159,32 @@ fn tangent<T> tan(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> asin(tangent<T> x)
+{
+    using std::asin;
+    using std::sqrt;
+
+    return { asin(x.v), x.d / sqrt(1.0 - sqr(x.v)) };
+}
+
+template<typename T>
+fn tangent<T> acos(tangent<T> x)
+{
+    using std::acos;
+    using std::sqrt;
+
+    return { acos(x.v), -x.d / sqrt(1.0 - sqr(x.v)) };
+}
+
+template<typename T>
+fn tangent<T> atan(tangent<T> x)
+{
+    using std::atan;
+
+    return { atan(x.v), x.d / (1.0 + sqr(x.v)) };
+}
+
+template<typename T>
 fn tangent<T> exp(tangent<T> x)
 {
     using std::exp;
