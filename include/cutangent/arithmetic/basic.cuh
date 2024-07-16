@@ -171,8 +171,8 @@ fn tangent<T> sqr(tangent<T> x)
 template<typename T>
 fn tangent<T> sqrt(tangent<T> x)
 {
-    using std::sqrt;
     using std::numeric_limits;
+    using std::sqrt;
     // NOTE: We currently do not treat the case where x.v == 0, x.d > 0 to map to +inf.
     return { sqrt(x.v), x.d / (2.0 * sqrt(x.v) + (x.v == static_cast<T>(0.0) ? numeric_limits<T>::min() : 0.0)) };
 }
@@ -212,6 +212,14 @@ fn tangent<T> pow(tangent<T> x, tangent<T> n)
 
     return { pow(x.v, n.v),
              n.v * pow(x.v, n.v - 1) * x.d + pow(x.v, n.v) * log(x.v) * n.d };
+}
+
+template<typename T>
+fn tangent<T> cbrt(tangent<T> x)
+{
+    using std::cbrt;
+
+    return { cbrt(x.v), x.d / (static_cast<T>(3.0) * sqr(cbrt(x.v))) };
 }
 
 template<typename T>
