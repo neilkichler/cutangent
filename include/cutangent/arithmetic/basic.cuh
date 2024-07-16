@@ -243,6 +243,30 @@ fn tangent<T> ceil(tangent<T> x)
 }
 
 template<typename T>
+fn T rint(tangent<T> x)
+{
+    using std::rint;
+
+    return rint(x.v);
+}
+
+template<typename T>
+fn long lrint(tangent<T> x)
+{
+    using std::lrint;
+
+    return lrint(x.v);
+}
+
+template<typename T>
+fn long long llrint(tangent<T> x)
+{
+    using std::llrint;
+
+    return llrint(x.v);
+}
+
+template<typename T>
 fn tangent<T> floor(tangent<T> x)
 {
     using std::floor;
