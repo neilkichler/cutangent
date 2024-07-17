@@ -13,23 +13,31 @@ constexpr auto f(auto x, auto y)
 {
     auto print = [](auto x) { printf("{%g, %g}\n", x.v, x.d); };
 
-    auto a = x + y;
-    auto b = x - y;
-    auto c = x * y;
-    auto d = x / y;
-    auto e = max(x, y);
-    auto f = min(x, y);
-    auto g = mid(x, y, y);
-    auto h = sin(x);
-    auto i = cos(x);
-    auto j = exp(x);
-    auto k = log(x);
-    auto l = pown(x, 2);
-    auto m = x * 2;
-    auto n = log2(x);
-    auto o = log10(x);
-    auto p = tan(x);
-    auto q = atan(x);
+    auto a  = x + y;
+    auto b  = x - y;
+    auto c  = x * y;
+    auto d  = x / y;
+    auto e  = max(x, y);
+    auto f  = min(x, y);
+    auto g  = mid(x, y, y);
+    auto h  = sin(x);
+    auto i  = cos(x);
+    auto j  = exp(x);
+    auto k  = log(x);
+    auto l  = pown(x, 2);
+    auto m  = x * 2;
+    auto n  = log2(x);
+    auto o  = log10(x);
+    auto p  = tan(x);
+    auto q  = asin(x);
+    auto r  = acos(x);
+    auto s  = atan(x);
+    auto t  = sinh(x);
+    auto u  = cosh(x);
+    auto v  = tanh(x);
+    auto w  = asinh(x);
+    auto aa = acosh(x);
+    auto bb = atanh(x);
 
     print(a);
     print(b);
@@ -48,6 +56,14 @@ constexpr auto f(auto x, auto y)
     print(o);
     print(p);
     print(q);
+    print(r);
+    print(s);
+    print(t);
+    print(u);
+    print(v);
+    print(w);
+    print(aa);
+    print(bb);
     return a;
 }
 

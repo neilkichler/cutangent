@@ -189,6 +189,60 @@ fn tangent<T> atan(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> sinh(tangent<T> x)
+{
+    using std::cosh;
+    using std::sinh;
+
+    return { sinh(x.v), cosh(x.v) * x.d };
+}
+
+template<typename T>
+fn tangent<T> cosh(tangent<T> x)
+{
+    using std::cosh;
+    using std::sinh;
+
+    return { cosh(x.v), sinh(x.v) * x.d };
+}
+
+template<typename T>
+fn tangent<T> tanh(tangent<T> x)
+{
+    using std::cosh;
+    using std::pow;
+    using std::tanh;
+
+    return { tanh(x.v), x.d / (pow(cosh(x.v), 2)) };
+}
+
+template<typename T>
+fn tangent<T> asinh(tangent<T> x)
+{
+    using std::asinh;
+    using std::pow;
+
+    return { asinh(x.v), x.d / sqrt(pow(x.v, 2) + 1.0) };
+}
+
+template<typename T>
+fn tangent<T> acosh(tangent<T> x)
+{
+    using std::acosh;
+    using std::pow;
+
+    return { acosh(x.v), x.d / sqrt(pow(x.v, 2) - 1.0) };
+}
+
+template<typename T>
+fn tangent<T> atanh(tangent<T> x)
+{
+    using std::atanh;
+
+    return { atanh(x.v), x.d / (1.0 - pow(x.v, 2)) };
+}
+
+template<typename T>
 fn tangent<T> exp(tangent<T> x)
 {
     using std::exp;
