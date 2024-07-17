@@ -380,6 +380,7 @@ template<typename T>
 fn bool isinf(tangent<T> x)
 {
     using std::isinf;
+    using ::isinf;
 
     return isinf(x.v);
 }
