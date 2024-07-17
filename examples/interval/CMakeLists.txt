@@ -2,7 +2,7 @@ add_executable(interval interval.cu)
 
 include(FetchContent)
 FetchContent_Declare(
-  cumccormick
+  cuinterval
   GIT_REPOSITORY https://github.com/neilkichler/cuinterval.git
   GIT_TAG main
 )
