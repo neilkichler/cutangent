@@ -50,9 +50,21 @@ fn tangent<T> operator-(tangent<T> a, T b)
 }
 
 template<typename T>
+fn tangent<T> operator-(tangent<T> a, std::integral auto b)
+{
+    return { a.v - static_cast<T>(b), a.d };
+}
+
+template<typename T>
 fn tangent<T> operator-(T a, tangent<T> b)
 {
     return { a - b.v, -b.d };
+}
+
+template<typename T>
+fn tangent<T> operator-(std::integral auto a, tangent<T> b)
+{
+    return { static_cast<T>(a) - b.v, -b.d };
 }
 
 template<typename T>
@@ -379,8 +391,8 @@ fn tangent<T> floor(tangent<T> x)
 template<typename T>
 fn bool isinf(tangent<T> x)
 {
-    using std::isinf;
     using ::isinf;
+    using std::isinf;
 
     return isinf(x.v);
 }
