@@ -38,7 +38,10 @@ constexpr auto f(auto x, auto y)
     // auto a = pown(x, 3);
     // auto a = pown(x, 4.0);
     // auto a = pow(x, 4.0);
-    auto a = pow(x, y);
+    // auto a = pow(x, y);
+    auto a = atan2(y, x);
+    // auto a = atan2(y, 2.0);
+    // auto a = atan2(2.0, x);
     // auto a = max(x, y);
     // auto a = min(x, y);
     // auto a = hull(x, y);

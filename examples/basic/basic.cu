@@ -38,6 +38,9 @@ constexpr auto f(auto x, auto y)
     auto w  = asinh(x);
     auto aa = acosh(x);
     auto bb = atanh(x);
+    auto cc = atan2(y, x);
+    auto dd = atan2(y, 2.0);
+    auto ee = atan2(2.0, x);
 
     print(a);
     print(b);
@@ -64,6 +67,9 @@ constexpr auto f(auto x, auto y)
     print(w);
     print(aa);
     print(bb);
+    print(cc);
+    print(dd);
+    print(ee);
     return a;
 }
 

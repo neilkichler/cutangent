@@ -201,6 +201,33 @@ fn tangent<T> atan(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> atan2(tangent<T> a, tangent<T> b)
+{
+    using std::atan2;
+    using std::pow;
+
+    return { atan2(a.v, b.v), (a.d * b.v - b.d * a.v) / (pow(a.v, 2) + pow(b.v, 2)) };
+}
+
+template<typename T>
+fn tangent<T> atan2(tangent<T> a, T b)
+{
+    using std::atan2;
+    using std::pow;
+
+    return { atan2(a.v, b), b * a.d / (pow(a.v, 2) + pow(b, 2)) };
+}
+
+template<typename T>
+fn tangent<T> atan2(T a, tangent<T> b)
+{
+    using std::atan2;
+    using std::pow;
+
+    return { atan2(a, b.v), -a * b.d / (pow(a, 2) + pow(b.v, 2)) };
+}
+
+template<typename T>
 fn tangent<T> sinh(tangent<T> x)
 {
     using std::cosh;
