@@ -104,6 +104,30 @@ fn tangent<T> operator/(tangent<T> a, tangent<T> b)
 }
 
 template<typename T>
+fn tangent<T> operator/(T a, tangent<T> b)
+{
+    return { a / b.v, (-a * b.d) / (b.v * b.v) };
+}
+
+template<typename T>
+fn tangent<T> operator/(tangent<T> a, T b)
+{
+    return { a.v / b, a.d / b };
+}
+
+template<typename T>
+fn tangent<T> operator/(std::integral auto a, tangent<T> b)
+{
+    return { a / b.v, (-a * b.d) / (b.v * b.v) };
+}
+
+template<typename T>
+fn tangent<T> operator/(tangent<T> a, std::integral auto b)
+{
+    return { a.v / b, a.d / b };
+}
+
+template<typename T>
 fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
     using std::max;
