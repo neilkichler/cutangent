@@ -4,6 +4,11 @@
 #include <cutangent/arithmetic/basic.cuh>
 #include <cutangent/tangent.h>
 
+#pragma nv_diagnostic push
+// ignore "821: function was referenced but not defined" for e.g. add_down since
+// this has to be defined by the type and is only included in an upstream project.
+#pragma nv_diag_suppress 821
+
 namespace cu::intrinsic
 {
 // clang-format off
@@ -44,8 +49,8 @@ namespace cu::intrinsic
 
     template<> inline __device__ tangent<double> fma_down  (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
     template<> inline __device__ tangent<double> fma_up    (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
-    template<> inline __device__ tangent<double> add_down  (tangent<double> x, tangent<double> y) { return x + y; }
-    template<> inline __device__ tangent<double> add_up    (tangent<double> x, tangent<double> y) { return x + y; }
+    template<> inline __device__ tangent<double> add_down  (tangent<double> x, tangent<double> y) { return { add_down(x.v, y.v), add_down(x.d, y.d) }; }
+    template<> inline __device__ tangent<double> add_up    (tangent<double> x, tangent<double> y) { return { add_up(x.v, y.v), add_up(x.d, y.d) }; }
     template<> inline __device__ tangent<double> sub_down  (tangent<double> x, tangent<double> y) { return x - y; }
     template<> inline __device__ tangent<double> sub_up    (tangent<double> x, tangent<double> y) { return x - y; }
     template<> inline __device__ tangent<double> mul_down  (tangent<double> x, tangent<double> y) { return x * y; }
@@ -77,5 +82,7 @@ namespace cu::intrinsic
 
 // clang-format on
 } // namespace cu::intrinsic
+
+#pragma nv_diagnostic pop
 
 #endif // CUTANGENT_ARITHMETIC_INTRINSIC_CUH
