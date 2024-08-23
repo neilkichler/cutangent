@@ -38,6 +38,18 @@ fn tangent<T> operator+(T a, tangent<T> b)
 }
 
 template<typename T>
+fn tangent<T> operator+(tangent<T> a, auto b)
+{
+    return { a.v + b, a.d };
+}
+
+template<typename T>
+fn tangent<T> operator+(auto a, tangent<T> b)
+{
+    return { a + b.v, b.d };
+}
+
+template<typename T>
 fn tangent<T> operator-(tangent<T> a, tangent<T> b)
 {
     return { a.v - b.v, a.d - b.d };
@@ -284,6 +296,7 @@ fn tangent<T> asinh(tangent<T> x)
 {
     using std::asinh;
     using std::pow;
+    using std::sqrt;
 
     return { asinh(x.v), x.d / sqrt(pow(x.v, 2) + 1.0) };
 }
@@ -293,6 +306,7 @@ fn tangent<T> acosh(tangent<T> x)
 {
     using std::acosh;
     using std::pow;
+    using std::sqrt;
 
     return { acosh(x.v), x.d / sqrt(pow(x.v, 2) - 1.0) };
 }
@@ -301,6 +315,7 @@ template<typename T>
 fn tangent<T> atanh(tangent<T> x)
 {
     using std::atanh;
+    using std::pow;
 
     return { atanh(x.v), x.d / (1.0 - pow(x.v, 2)) };
 }

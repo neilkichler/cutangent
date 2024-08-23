@@ -35,8 +35,13 @@ constexpr auto f(auto x, auto y)
     // auto a = log(x);
     // auto a = recip(x);
     // auto a = cos(x);
+    // auto a = atan(x);
+    auto a = sinh(x);
+    // auto a = cosh(x);
     // auto a = tanh(x);
-    auto a = atan(x);
+    // auto a = asinh(x);
+    // auto a = acosh(x);
+    // auto a = atanh(x);
     // auto a = asin(x);
     // auto a = acos(x);
     // auto a = pown(x, 3);
