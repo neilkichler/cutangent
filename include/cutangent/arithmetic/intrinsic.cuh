@@ -75,10 +75,10 @@ namespace cu::intrinsic
     // template<> inline __device__ double exp10     (double x)           { return ::exp10(x); }
     // template<> inline __device__ double exp2      (double x)           { return ::exp2(x); }
     template<> inline __device__ __host__ tangent<double> nan() { return { ::nan(""), ::nan("") }; }
-    template<> inline __device__ tangent<double> neg_inf() { return { __longlong_as_double(0xfff0000000000000ull), 0.0 }; }
-    template<> inline __device__ tangent<double> pos_inf() { return { __longlong_as_double(0x7ff0000000000000ull), 0.0 }; }
-    template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), 0.0 }; }
-    template<> inline __device__ tangent<double> prev_floating(tangent<double> x) { return { nextafter(x.v, neg_inf<tangent<double>>().v), 0.0 }; }
+    template<> inline __device__ tangent<double> neg_inf() { return { __longlong_as_double(0xfff0000000000000ull), __longlong_as_double(0xfff0000000000000ull) }; }
+    template<> inline __device__ tangent<double> pos_inf() { return { __longlong_as_double(0x7ff0000000000000ull), __longlong_as_double(0x7ff0000000000000ull) }; }
+    template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), nextafter(x.d, pos_inf<tangent<double>>().d) }; }
+    template<> inline __device__ tangent<double> prev_floating(tangent<double> x) { return { nextafter(x.v, neg_inf<tangent<double>>().v), nextafter(x.d, neg_inf<tangent<double>>().d) }; }
 
 // clang-format on
 } // namespace cu::intrinsic

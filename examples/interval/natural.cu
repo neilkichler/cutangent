@@ -15,6 +15,8 @@ using cu::tangent;
 template<typename T>
 using I = cu::interval<T>;
 
+using T = tangent<I<double>>;
+
 constexpr auto f(auto x, auto y)
 {
     // Currently supported functions:
@@ -27,7 +29,7 @@ constexpr auto f(auto x, auto y)
     // auto a = x + y;
     // auto a = x - y;
     // auto a = x / y;
-    // auto a = x * y;
+    auto a = x * y;
     // auto a = sqr(x);
     // auto a = sqrt(x);
     // auto a = abs(x);
@@ -35,11 +37,11 @@ constexpr auto f(auto x, auto y)
     // auto a = log(x);
     // auto a = recip(x);
     // auto a = cos(x);
-    // auto a = pown(x, 3);
+    // auto a = pow(x, 3);
     // auto a = pown(x, 4.0);
     // auto a = pow(x, 4.0);
     // auto a = pow(x, y);
-    auto a = atan2(y, x);
+    // auto a = atan2(y, x);
     // auto a = atan2(y, 2.0);
     // auto a = atan2(2.0, x);
     // auto a = max(x, y);
@@ -48,7 +50,7 @@ constexpr auto f(auto x, auto y)
     return a;
 }
 
-__global__ void kernel(I<tangent<double>> *xs, I<tangent<double>> *ys, I<tangent<double>> *res, int n)
+__global__ void kernel(T *xs, T *ys, T *res, int n)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) {
@@ -59,14 +61,13 @@ __global__ void kernel(I<tangent<double>> *xs, I<tangent<double>> *ys, I<tangent
 int main()
 {
     constexpr int n = 1;
-    using T         = I<tangent<double>>;
     T xs[n], ys[n], res[n];
 
     // generate dummy data
-
-    xs[0] = { .lb = { 0.5, 1.0 }, .ub = { 3.0, 1.0 } } ;
-
-    ys[0] = { .lb = { 2.0, 0.0 }, .ub = { 5.0, 0.0 } };
+    value(xs[0])      = { 0.5, 3.0 };
+    derivative(xs[0]) = { 1.0, 1.0 };
+    value(ys[0])      = { 2.0, 5.0 };
+    derivative(ys[0]) = { 0.0, 0.0 };
 
     std::cout << xs[0] << std::endl;
     std::cout << ys[0] << std::endl;

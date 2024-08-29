@@ -28,6 +28,18 @@ struct tangent
     constexpr bool operator==(const tangent &other) const noexcept { return v == other.v; }
 };
 
+template<typename T>
+constexpr T &value(tangent<T> &x)
+{
+    return x.v;
+}
+
+template<typename T>
+constexpr T &derivative(tangent<T> &x)
+{
+    return x.d;
+}
+
 } // namespace cu
 
 #endif // CUTANGENT_TANGENT_H

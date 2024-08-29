@@ -62,9 +62,9 @@ fn tangent<T> operator-(tangent<T> a, T b)
 }
 
 template<typename T>
-fn tangent<T> operator-(tangent<T> a, std::integral auto b)
+fn tangent<T> operator-(tangent<T> a, auto b)
 {
-    return { a.v - static_cast<T>(b), a.d };
+    return { a.v - b, a.d };
 }
 
 template<typename T>
@@ -74,9 +74,9 @@ fn tangent<T> operator-(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator-(std::integral auto a, tangent<T> b)
+fn tangent<T> operator-(auto a, tangent<T> b)
 {
-    return { static_cast<T>(a) - b.v, -b.d };
+    return { a - b.v, -b.d };
 }
 
 template<typename T>
@@ -100,11 +100,23 @@ fn tangent<T> operator*(T a, tangent<T> b)
 template<typename T>
 fn tangent<T> operator*(tangent<T> a, std::integral auto b)
 {
-    return { a.v * static_cast<T>(b), a.d * static_cast<T>(b) };
+    return { a.v * b, a.d * b };
 }
 
 template<typename T>
 fn tangent<T> operator*(std::integral auto a, tangent<T> b)
+{
+    return b * a;
+}
+
+template<typename T>
+fn tangent<T> operator*(tangent<T> a, auto b)
+{
+    return { a.v * b, a.d * b };
+}
+
+template<typename T>
+fn tangent<T> operator*(auto a, tangent<T> b)
 {
     return b * a;
 }
