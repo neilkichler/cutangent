@@ -9,11 +9,8 @@
 
 #include <iostream>
 
-using cu::tangent;
-
 using I = cu::interval<double>;
-
-using T = tangent<I>;
+using T = cu::tangent<I>;
 
 constexpr auto f(auto x)
 {
