@@ -6,7 +6,6 @@
 #include <cuinterval/format.h>
 
 #include <cutangent/cutangent.cuh>
-#include <cutangent/format.h>
 
 #include <iostream>
 
@@ -21,11 +20,6 @@ constexpr auto f(auto x)
     using std::pow;
 
     return 3.0 * pow(x, 3) + pow(x, 2) - 5.0 * x - 1.0;
-}
-
-constexpr auto g(auto x, auto y)
-{
-    return x * y;
 }
 
 __global__ void centered_form(T *xs, I *res, int n)
