@@ -1,7 +1,8 @@
 #ifndef CUTANGENT_ARITHMETIC_BASIC_V_CUH
 #define CUTANGENT_ARITHMETIC_BASIC_V_CUH
 
-#include <cutangent/vtangent.h>
+#include <cutangent/tangents.h>
+#include <cutangent/arithmetic/intrinsic_v.cuh>
 
 #include <algorithm>
 #include <cmath>
@@ -14,9 +15,9 @@ namespace cu
 #define fn inline constexpr __device__
 
 template<typename T, int N>
-fn vtangent<T, N> operator-(vtangent<T, N> x)
+fn tangents<T, N> operator-(tangents<T, N> x)
 {
-    vtangent<T, N> res;
+    tangents<T, N> res;
     res.v = -x.v;
     for (int i = 0; i < N; ++i) {
         res.ds[i] = -x.ds[i];
@@ -24,21 +25,38 @@ fn vtangent<T, N> operator-(vtangent<T, N> x)
     return res;
 }
 
+// template<typename T, int N>
+// fn vtangent<T, N> operator+(vtangent<T, N> a, vtangent<T, N> b)
+// {
+//     vtangent<T, N> res;
+//     res.v = a.v + b.v;
+//     for (int i = 0; i < N; ++i) {
+//         printf("a.ds[%d] = %g\n", i, a.ds[i]);
+//         printf("b.ds[%d] = %g\n", i, b.ds[i]);
+//         res.ds[i] = a.ds[i] + b.ds[i];
+//         printf("res.ds[%d] = %g\n", i, res.ds[i]);
+//     }
+//     return res;
+// }
+
 template<typename T, int N>
-fn vtangent<T, N> operator+(vtangent<T, N> a, vtangent<T, N> b)
+fn tangents<T, N> operator+(tangents<T, N> a, tangents<T, N> b)
 {
-    vtangent<T, N> res;
+    tangents<T, N> res;
     res.v = a.v + b.v;
-    for (int i = 0; i < N; ++i) {
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+        // printf("a.ds[%d] = %g\n", i, a.ds[i]);
+        // printf("b.ds[%d] = %g\n", i, b.ds[i]);
         res.ds[i] = a.ds[i] + b.ds[i];
+        // printf("res.ds[%d] = %g\n", i, res.ds[i]);
     }
     return res;
 }
 
 template<typename T, int N>
-fn vtangent<T, N> operator+(vtangent<T, N> a, T b)
+fn tangents<T, N> operator+(tangents<T, N> a, T b)
 {
-    vtangent<T, N> res;
+    tangents<T, N> res;
     res.v = a.v + b;
     for (int i = 0; i < N; ++i) {
         res.ds[i] = a.ds[i];
@@ -95,19 +113,38 @@ fn vtangent<T, N> operator+(vtangent<T, N> a, T b)
 // }
 //
 
+// template<typename T, int N>
+// fn vtangent<T, N> operator*(vtangent<T, N> a, vtangent<T, N> b)
+// {
+//     vtangent<T, N> res;
+//     res.v = a.v * b.v;
+//     // printf("a.v = %g\n", a.v);
+//     // printf("b.v = %g\n", b.v);
+//     for (int i = 0; i < N; ++i) {
+//         // printf("a.ds[%d] = %g\n", i, a.ds[i]);
+//         // printf("b.ds[%d] = %g\n", i, b.ds[i]);
+//         res.ds[i] = a.v * b.ds[i] + a.ds[i] * b.v;
+//         // printf("res.ds[%d] = %g\n", i, res.ds[i]);
+//     }
+//     return res;
+// }
+
 template<typename T, int N>
-fn vtangent<T, N> operator*(vtangent<T, N> a, vtangent<T, N> b)
+fn tangents<T, N> operator*(tangents<T, N> a, tangents<T, N> b)
 {
-    vtangent<T, N> res;
-    res.v = a.v * b.v;
-    // printf("a.v = %g\n", a.v);
-    // printf("b.v = %g\n", b.v);
-    for (int i = 0; i < N; ++i) {
+    tangents<T, N> res;
+
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
         // printf("a.ds[%d] = %g\n", i, a.ds[i]);
         // printf("b.ds[%d] = %g\n", i, b.ds[i]);
         res.ds[i] = a.v * b.ds[i] + a.ds[i] * b.v;
         // printf("res.ds[%d] = %g\n", i, res.ds[i]);
     }
+
+    // if (threadIdx.x == 0) { // could use a atomicExch to let the first thread that accesses this region compute the value
+    res.v = a.v * b.v;
+    // }
+
     return res;
 }
 
@@ -183,23 +220,37 @@ fn vtangent<T, N> operator*(vtangent<T, N> a, vtangent<T, N> b)
 //     return { a.v / b, a.d / b };
 // }
 //
-// template<typename T>
-// fn tangent<T> max(tangent<T> a, tangent<T> b)
-// {
-//     using std::max;
-//
-//     return { max(a.v, b.v),
-//              a.v >= b.v ? a.d : b.d }; // '>=' instead of '>' due to subgradient
-// }
-//
-// template<typename T>
-// fn tangent<T> min(tangent<T> a, tangent<T> b)
-// {
-//     using std::min;
-//
-//     return { min(a.v, b.v),
-//              a.v <= b.v ? a.d : b.d }; // '<=' instead of '<' due to subgradient
-// }
+template<typename T, int N>
+fn tangents<T, N> max(tangents<T, N> a, tangents<T, N> b)
+{
+    using std::max;
+
+    tangents<T, N> res;
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+        // printf("a.ds[%d] = %g\n", i, a.ds[i]);
+        // printf("b.ds[%d] = %g\n", i, b.ds[i]);
+        res.ds[i] = a.v >= b.v ? a.ds[i] : b.ds[i]; // '>=' instead of '>' due to subgradient
+        // printf("res.ds[%d] = %g\n", i, res.ds[i]);
+    }
+    res.v = max(a.v, b.v);
+    return res;
+}
+
+template<typename T, int N>
+fn tangents<T, N> min(tangents<T, N> a, tangents<T, N> b)
+{
+    using std::min;
+
+    tangents<T, N> res;
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+        // printf("a.ds[%d] = %g\n", i, a.ds[i]);
+        // printf("b.ds[%d] = %g\n", i, b.ds[i]);
+        res.ds[i] = a.v <= b.v ? a.ds[i] : b.ds[i]; // '>=' instead of '>' due to subgradient
+        // printf("res.ds[%d] = %g\n", i, res.ds[i]);
+    }
+    res.v = min(a.v, b.v);
+    return res;
+}
 //
 // template<typename T>
 // fn tangent<T> abs(tangent<T> x)

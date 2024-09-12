@@ -5,7 +5,7 @@
 #include <cutangent/arithmetic/basic.cuh>
 #include <cutangent/arithmetic/intrinsic.cuh>
 
-#include <cutangent/vtangent.h>
+#include <cutangent/tangents.h>
 #include <cutangent/arithmetic/basic_v.cuh>
 #include <cutangent/arithmetic/intrinsic_v.cuh>
 
