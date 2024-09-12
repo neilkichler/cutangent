@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-using cu::vtangent;
+using cu::tangents;
 
 constexpr auto f(auto x, auto y)
 {
@@ -29,7 +29,7 @@ __global__ void unary_op(T *xs, T *res, int n)
     auto print = [](auto x) { printf("[GPU] {%g, [%g]}\n", x.v, x.ds[0]); };
     int i      = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) {
-        vtangent<T, 1> xs_v;
+        tangents<T, 1> xs_v;
 
         xs_v.v = xs[i];
 
@@ -50,8 +50,8 @@ __global__ void binary_op(T *xs, T *ys, T *res, int n)
     auto print = [](auto x) { printf("[GPU] {%g, [%g, %g]}\n", x.v, x.ds[0], x.ds[1]); };
     int i      = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) {
-        vtangent<T, 2> xs_v;
-        vtangent<T, 2> ys_v;
+        tangents<T, 2> xs_v;
+        tangents<T, 2> ys_v;
 
         xs_v.v = xs[i];
         ys_v.v = ys[i];

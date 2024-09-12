@@ -24,7 +24,7 @@ constexpr auto f(auto x, auto y)
     // auto a = sub(x, y);
     // auto a = mul(x, y);
     // auto a = div(x, y);
-    // auto a = x + y;
+    auto a = x + y;
     // auto a = x - y;
     // auto a = x / y;
     // auto a = x * y;
@@ -36,7 +36,7 @@ constexpr auto f(auto x, auto y)
     // auto a = recip(x);
     // auto a = cos(x);
     // auto a = atan(x);
-    auto a = sinh(x);
+    // auto a = sinh(x);
     // auto a = cosh(x);
     // auto a = tanh(x);
     // auto a = asinh(x);
