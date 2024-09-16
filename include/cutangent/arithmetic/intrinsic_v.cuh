@@ -53,9 +53,26 @@ inline __device__ tangents<double, N> add_down(tangents<double, N> x, tangents<d
 {
     tangents<double, N> res;
     res.v = add_down(x.v, y.v);
-    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+
+    // multiple mccormick relaxations in one block
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
         res.ds[i] = add_down(x.ds[i], y.ds[i]);
     }
+
+    // only a single mccormick relaxation per bock
+    // int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    // for (int i = gid; i < N; i += blockDim.x * gridDim.x) {
+    //     res.ds[i] = add_down(x.ds[i], y.ds[i]);
+    // }
+
+
+    // for (int i = threadIdx.x; i < N; i += blockDim.x) {
+    //     res.ds[i] = add_down(x.ds[i], y.ds[i]);
+    // }
+    // for (int i = 0; i < N; i++) {
+    //     res.ds[i] = add_down(x.ds[i], y.ds[i]);
+    // }
     return res;
 }
 
@@ -64,9 +81,25 @@ inline __device__ tangents<double, N> add_up(tangents<double, N> a, tangents<dou
 {
     tangents<double, N> res;
     res.v = add_up(a.v, b.v);
-    for (int i = threadIdx.x; i < N; i += blockDim.x) {
-        res.ds[i] = add_up(a.ds[i], b.ds[i]);
+
+    // multiple mccormick relaxations in one block
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+        res.ds[i] = add_down(a.ds[i], b.ds[i]);
     }
+
+    // only a single mccormick relaxation per bock
+    // int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    // for (int i = gid; i < N; i += blockDim.x * gridDim.x) {
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
+
+    // for (int i = threadIdx.x; i < N; i += blockDim.x) {
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
+    // for (int i = 0; i < N; i++) {
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
     return res;
 }
 

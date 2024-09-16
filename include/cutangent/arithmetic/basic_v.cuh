@@ -25,33 +25,36 @@ fn tangents<T, N> operator-(tangents<T, N> x)
     return res;
 }
 
-// template<typename T, int N>
-// fn vtangent<T, N> operator+(vtangent<T, N> a, vtangent<T, N> b)
-// {
-//     vtangent<T, N> res;
-//     res.v = a.v + b.v;
-//     for (int i = 0; i < N; ++i) {
-//         printf("a.ds[%d] = %g\n", i, a.ds[i]);
-//         printf("b.ds[%d] = %g\n", i, b.ds[i]);
-//         res.ds[i] = a.ds[i] + b.ds[i];
-//         printf("res.ds[%d] = %g\n", i, res.ds[i]);
-//     }
-//     return res;
-// }
-
 template<typename T, int N>
 fn tangents<T, N> operator+(tangents<T, N> a, tangents<T, N> b)
 {
     tangents<T, N> res;
     res.v = a.v + b.v;
-    for (int i = threadIdx.x; i < N; i += blockDim.x) {
-        // printf("a.ds[%d] = %g\n", i, a.ds[i]);
-        // printf("b.ds[%d] = %g\n", i, b.ds[i]);
+    printf("HELLO\n");
+    for (int i = 0; i < N; ++i) {
+        printf("a.ds[%d] = %g\n", i, a.ds[i]);
+        printf("b.ds[%d] = %g\n", i, b.ds[i]);
         res.ds[i] = a.ds[i] + b.ds[i];
-        // printf("res.ds[%d] = %g\n", i, res.ds[i]);
+        printf("res.ds[%d] = %g\n", i, res.ds[i]);
     }
     return res;
 }
+
+
+// template<typename T, int N>
+// fn tangents<T, N> operator+(tangents<T, N> a, tangents<T, N> b)
+// {
+//     tangents<T, N> res;
+//     res.v = a.v + b.v;
+//     for (int i = threadIdx.x; i < N; i += blockDim.x) {
+//         // printf("a.ds[%d] = %g\n", i, a.ds[i]);
+//         // printf("b.ds[%d] = %g\n", i, b.ds[i]);
+//         res.ds[i] = a.ds[i] + b.ds[i];
+//         // printf("res.ds[%d] = %g\n", i, res.ds[i]);
+//     }
+//     return res;
+// }
+
 
 template<typename T, int N>
 fn tangents<T, N> operator+(tangents<T, N> a, T b)
