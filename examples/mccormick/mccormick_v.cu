@@ -10,6 +10,7 @@
 #include <cutangent/cutangent.cuh>
 #include <cutangent/format.h>
 
+#include <cmath>
 #include <iostream>
 
 using cu::tangents;
@@ -20,9 +21,12 @@ constexpr __device__ auto f(auto x, auto y, auto z, auto w)
 {
     auto print = [](auto &x) {
 #if PRINT_DEBUG
-        printf("[gid:%3d][bid:%3d][tid:%3d] f {%g, cv [%g, %g, %g, %g] cc [%g, %g, %g, %g] lb [%g, %g, %g, %g] ub [%g, %g, %g, %g]}\n",
+        printf("[gid:%3d][bid:%3d][tid:%3d] f {v {%g, %g, %g, %g}, cv [%g, %g, %g, %g] cc [%g, %g, %g, %g] lb [%g, %g, %g, %g] ub [%g, %g, %g, %g]}\n",
                threadIdx.x + blockIdx.x * blockDim.x, blockIdx.x, threadIdx.x,
                x.cv.v,
+               x.cc.v,
+               x.box.lb.v,
+               x.box.ub.v,
                x.cv.ds[0], x.cv.ds[1], x.cv.ds[2], x.cv.ds[3],
                x.cc.ds[0], x.cc.ds[1], x.cc.ds[2], x.cc.ds[3],
                x.box.lb.ds[0], x.box.lb.ds[1], x.box.lb.ds[2], x.box.lb.ds[3],
@@ -59,6 +63,11 @@ __global__ void kernel(T *in, T *out, int n_elems, int n_vars)
     int vid              = tid / n_doubles_per_mc;                // variable id
     int xid              = gid / n_vars;                          // mccormick id in xs
 
+    // TODO: currently the last element in the block is not corretly initialized with the tangents because we don't get to the last 3 variables
+    // this is because we only have 256 threads but we require to init 320 variables.
+    //
+    // maybe they store in the same location in the second loop?
+
     // block range when considering only mccormick values (for initial copy from global memory)
     int n_elems_per_block = (n_elems + n_blocks - 1) / n_blocks;
     int block_start       = n_elems_per_block * bid * 4 * n_vars;
@@ -69,17 +78,26 @@ __global__ void kernel(T *in, T *out, int n_elems, int n_vars)
     int t_block_start                   = n_elems_per_block_with_tangents * bid;
     int t_block_end                     = min(t_block_start + n_elems_per_block_with_tangents, n_elems * n_vars * n_doubles_per_mc);
 
+    // if (tid == 0)
+    //     printf("[gid:%3d][bid:%3d][tid:%3d][vid:%3d][xid:%3d] elems_per_block: %3d block_start: %3d block_end: %3d\n",
+    //            gid, bid, tid, vid, xid, n_elems_per_block, block_start, block_end);
+
+    // seed tangents
     for (int i = tid + t_block_start; i < t_block_end; i += n_threads) {
-        int tangent_idx = i % (N + 1) - 1; // tangent index for this thread, -1 is no tangent but a value to be skipped
-                                           // faster alternative: int tangent_idx = x - floor(1/(N+1) * x) * (N+1) - 1; // TODO: check if compiler figures this out
-        // seed tangents
+        int tangent_idx = i % (N + 1) - 1;                                      // tangent index for this thread, -1 is no tangent but a value to be skipped
+                                                                                // faster alternative: int tangent_idx = x - floor(1/(N+1) * x) * (N+1) - 1; // TODO: check if compiler figures this out
         bool is_cv_or_cc                  = i % n_doubles_per_mc < 2 * (N + 1); // 2 since we only seed cv and cc
         ((double *)xs)[i - t_block_start] = (vid % n_vars == tangent_idx) && is_cv_or_cc ? 1.0 : 0.0;
+
+        printf("[gid:%3d][bid:%3d][tid:%3d][vid:%3d][xid:%3d][i:%3d] n_elems_tangent: %3d t_block_start: %3d t_block_end: %3d\n",
+               gid, bid, tid, vid, xid, i, n_elems_per_block_with_tangents, t_block_start, t_block_end);
 
 #if PRINT_DEBUG
         printf("[gid:%3d][bid:%3d][tid:%3d][vid:%3d][tangent_idx:%3d][xid:%3d][i:%3d] tangent seed value: %g\n", gid, bid, tid, vid, tangent_idx, xid, i - t_block_start, ((double *)xs)[i - t_block_start]);
 #endif
     }
+
+    __syncthreads();
 
     // Load elements from global memory into shared memory trying to get a balanced allocation in all blocks
 
@@ -128,8 +146,8 @@ __global__ void kernel(T *in, T *out, int n_elems, int n_vars)
         int sid = out_sh_mem_offset + i - out_block_start;
         out[i]  = ((double *)xs)[sid];
 #if PRINT_DEBUG
-        printf("[gid:%3d][bid:%3d][tid:%3d][bstart:%3d][bend:%3d] copy shared [%3d] (bank: [%3d]) into global [%3d] value: %g | %g\n",
-               gid, bid, tid, out_block_start, out_block_end, sid, sid % 32, i, ((double *)xs)[sid], out[i]);
+        printf("[gid:%3d][bid:%3d][tid:%3d][bstart:%3d][bend:%3d] copy shared [%3d] (bank: [%3d]) into global [%3d] value: %g\n",
+               gid, bid, tid, out_block_start, out_block_end, sid, sid % 32, i, out[i]);
 #endif
     }
 }
@@ -150,19 +168,19 @@ we should first try to make use of all the blocks individually doing one mccormi
 
 int main()
 {
-    constexpr int n_elems = 12;
+    constexpr int n_elems = 13;
     constexpr int n_vars  = 4;
     // constexpr int n_copy_doubles_per_mc = 4 + 2 * n_vars; // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
     constexpr int n_copy_doubles_per_mc = 4 + 4 * n_vars; // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
 
-    constexpr int n_tangents  = 4;                // the number of tangents to perform per mccormick relaxation
-    constexpr int n_mccormick = n_vars * n_elems; // the number of mccormick relaxations to access in shared memory per block
+    constexpr int n_blocks  = 4;
+    constexpr int n_threads = 256;
+
+    constexpr int n_tangents  = 4;                                      // the number of tangents to perform per mccormick relaxation
+    constexpr int n_mccormick = n_vars * std::ceil(n_elems / n_blocks); // the number of mccormick relaxations to access in shared memory per block
 
     static_assert(n_mccormick >= n_vars, "n_mccormick must be >= n_vars");
     static_assert(n_tangents <= n_vars, "n_tangents must be <= n_vars");
-
-    constexpr int n_blocks  = 4;
-    constexpr int n_threads = 256;
 
     cu::mccormick<double> xs[n_elems * n_vars] {};
     double res[n_elems * n_copy_doubles_per_mc] {};
@@ -229,6 +247,8 @@ int main()
 
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_res));
+
+    CUDA_CHECK(cudaFreeHost(h_xs));
 
     return 0;
 }
