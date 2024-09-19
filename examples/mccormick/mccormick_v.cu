@@ -60,7 +60,6 @@ __global__ void kernel(T *in, T *out, int n_elems, int n_vars)
     int n_threads        = blockDim.x;                            // number of threads in a block
     int n_blocks         = gridDim.x;                             // number of blocks in the grid  TODO: should probably be power of two for fast % operation
     int n_doubles_per_mc = 4 * (N + 1);                           // 4 for cv, cc, lb, ub
-    int vid              = tid / n_doubles_per_mc;                // variable id
     int xid              = gid / n_vars;                          // mccormick id in xs
 
     // TODO: currently the last element in the block is not corretly initialized with the tangents because we don't get to the last 3 variables
@@ -84,16 +83,19 @@ __global__ void kernel(T *in, T *out, int n_elems, int n_vars)
 
     // seed tangents
     for (int i = tid + t_block_start; i < t_block_end; i += n_threads) {
+        int v = i / n_doubles_per_mc;
+
         int tangent_idx = i % (N + 1) - 1;                                      // tangent index for this thread, -1 is no tangent but a value to be skipped
                                                                                 // faster alternative: int tangent_idx = x - floor(1/(N+1) * x) * (N+1) - 1; // TODO: check if compiler figures this out
         bool is_cv_or_cc                  = i % n_doubles_per_mc < 2 * (N + 1); // 2 since we only seed cv and cc
-        ((double *)xs)[i - t_block_start] = (vid % n_vars == tangent_idx) && is_cv_or_cc ? 1.0 : 0.0;
+        ((double *)xs)[i - t_block_start] = (v % n_vars == tangent_idx) && is_cv_or_cc ? 1.0 : 0.0;
 
         printf("[gid:%3d][bid:%3d][tid:%3d][vid:%3d][xid:%3d][i:%3d] n_elems_tangent: %3d t_block_start: %3d t_block_end: %3d\n",
-               gid, bid, tid, vid, xid, i, n_elems_per_block_with_tangents, t_block_start, t_block_end);
+               gid, bid, tid, v, xid, i, n_elems_per_block_with_tangents, t_block_start, t_block_end);
 
 #if PRINT_DEBUG
-        printf("[gid:%3d][bid:%3d][tid:%3d][vid:%3d][tangent_idx:%3d][xid:%3d][i:%3d] tangent seed value: %g\n", gid, bid, tid, vid, tangent_idx, xid, i - t_block_start, ((double *)xs)[i - t_block_start]);
+        printf("[iter:%3d][gid:%3d][bid:%3d][tid:%3d][vid:%3d][tangent_idx:%3d][xid:%3d][i:%3d] tangent seed value: %g\n",
+               iter, gid, bid, tid, v, tangent_idx, xid, i - t_block_start, ((double *)xs)[i - t_block_start]);
 #endif
     }
 
