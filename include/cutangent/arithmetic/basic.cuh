@@ -20,31 +20,31 @@ fn tangent<T> operator-(tangent<T> x)
 }
 
 template<typename T>
-fn tangent<T> operator+(tangent<T> a, tangent<T> b)
+fn tangent<T> operator+(const tangent<T> &a, const tangent<T> &b)
 {
     return { a.v + b.v, a.d + b.d };
 }
 
 template<typename T>
-fn tangent<T> operator+(tangent<T> a, T b)
+fn tangent<T> operator+(const tangent<T> &a, const T &b)
 {
     return { a.v + b, a.d };
 }
 
 template<typename T>
-fn tangent<T> operator+(T a, tangent<T> b)
+fn tangent<T> operator+(const T &a, const tangent<T> &b)
 {
     return { a + b.v, b.d };
 }
 
 template<typename T>
-fn tangent<T> operator+(tangent<T> a, auto b)
+fn tangent<T> operator+(const tangent<T> &a, const auto &b)
 {
     return { a.v + b, a.d };
 }
 
 template<typename T>
-fn tangent<T> operator+(auto a, tangent<T> b)
+fn tangent<T> operator+(const auto &a, const tangent<T> &b)
 {
     return { a + b.v, b.d };
 }
