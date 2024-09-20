@@ -51,14 +51,19 @@ using cu::tangents;
 template<int N>
 inline __device__ tangents<double, N> add_down(const tangents<double, N> &x, const tangents<double, N> &y)
 {
-    tangents<double, N> res;
+    __shared__ tangents<double, N> res;
     res.v = add_down(x.v, y.v);
 
     // multiple mccormick relaxations in one block
     int gid = blockIdx.x * blockDim.x + threadIdx.x;
     for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+        // printf("[gid: %3d][bid: %3d][tid: %3d] i: %3d\n", gid, blockIdx.x, threadIdx.x, i);
         res.ds[i] = add_down(x.ds[i], y.ds[i]);
     }
+
+    // if (threadIdx.x == 0) {
+    //     res.v = add_down(x.v, y.v);
+    // }
 
     // only a single mccormick relaxation per bock
     // int gid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -79,7 +84,7 @@ inline __device__ tangents<double, N> add_down(const tangents<double, N> &x, con
 template<int N>
 inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const tangents<double, N> &b)
 {
-    tangents<double, N> res;
+    __shared__ tangents<double, N> res;
     res.v = add_up(a.v, b.v);
 
     // multiple mccormick relaxations in one block
@@ -87,6 +92,10 @@ inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const
     for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
         res.ds[i] = add_down(a.ds[i], b.ds[i]);
     }
+
+    // if (threadIdx.x == 0) {
+    //     res.v = add_up(a.v, b.v);
+    // }
 
     // only a single mccormick relaxation per bock
     // int gid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -187,7 +196,7 @@ struct type{};
 template<typename T, int N>
 inline __device__ tangents<double, N> pos_inf(type<tangents<T, N>>)
 {
-    tangents<double, N> res;
+    __shared__ tangents<double, N> res;
     for (int i = threadIdx.x; i < N; i += blockDim.x) {
         res.ds[i] = pos_inf<T>();
     }
@@ -198,7 +207,7 @@ inline __device__ tangents<double, N> pos_inf(type<tangents<T, N>>)
 template<typename T, int N>
 inline __device__ tangents<double, N> neg_inf(type<tangents<T, N>>)
 {
-    tangents<double, N> res;
+    __shared__ tangents<double, N> res;
     for (int i = threadIdx.x; i < N; i += blockDim.x) {
         res.ds[i] = neg_inf<T>();
     }
