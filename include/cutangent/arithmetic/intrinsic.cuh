@@ -14,8 +14,8 @@ namespace cu::intrinsic
 // clang-format off
     template<typename T> inline __device__ T fma_down  (T x, T y, T z);
     template<typename T> inline __device__ T fma_up    (T x, T y, T z);
-    template<typename T> inline __device__ T add_down  (T x, T y);
-    template<typename T> inline __device__ T add_up    (T x, T y);
+    template<typename T> inline __device__ T add_down  (const T &x, const T &y);
+    template<typename T> inline __device__ T add_up    (const T &x, const T &y);
     template<typename T> inline __device__ T sub_down  (T x, T y);
     template<typename T> inline __device__ T sub_up    (T x, T y);
     template<typename T> inline __device__ T mul_down  (T x, T y);
@@ -49,8 +49,8 @@ namespace cu::intrinsic
 
     template<> inline __device__ tangent<double> fma_down  (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
     template<> inline __device__ tangent<double> fma_up    (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
-    template<> inline __device__ tangent<double> add_down  (tangent<double> x, tangent<double> y) { return { add_down(x.v, y.v), add_down(x.d, y.d) }; }
-    template<> inline __device__ tangent<double> add_up    (tangent<double> x, tangent<double> y) { return { add_up(x.v, y.v), add_up(x.d, y.d) }; }
+    template<> inline __device__ tangent<double> add_down  (const tangent<double> &x, const tangent<double> &y) { return { add_down(x.v, y.v), add_down(x.d, y.d) }; }
+    template<> inline __device__ tangent<double> add_up    (const tangent<double> &x, const tangent<double> &y) { return { add_up(x.v, y.v), add_up(x.d, y.d) }; }
     template<> inline __device__ tangent<double> sub_down  (tangent<double> x, tangent<double> y) { return x - y; }
     template<> inline __device__ tangent<double> sub_up    (tangent<double> x, tangent<double> y) { return x - y; }
     template<> inline __device__ tangent<double> mul_down  (tangent<double> x, tangent<double> y) { return x * y; }
