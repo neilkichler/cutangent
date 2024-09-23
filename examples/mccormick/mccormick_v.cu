@@ -61,19 +61,15 @@ kernel(T *in, T *out, int n_elems, int n_vars)
 {
     extern __shared__ cu::mccormick<cu::tangents<T, N>> xs[];
 
-    int n                = n_elems * n_vars;                      // total number of mccormick variables across all elements
-    int gid              = threadIdx.x + blockIdx.x * blockDim.x; // global id
-    int bid              = blockIdx.x;                            // block id
-    int tid              = threadIdx.x;                           // thread id inside block
-    int n_threads        = blockDim.x;                            // number of threads in a block
-    int n_blocks         = gridDim.x;                             // number of blocks in the grid  TODO: should probably be power of two for fast % operation
-    int n_doubles_per_mc = 4 * (N + 1);                           // 4 for cv, cc, lb, ub
-    int xid              = gid / n_vars;                          // mccormick id in xs
-
-    // TODO: currently the last element in the block is not corretly initialized with the tangents because we don't get to the last 3 variables
-    // this is because we only have 256 threads but we require to init 320 variables.
-    //
-    // maybe they store in the same location in the second loop?
+    int n                    = n_elems * n_vars;                      // total number of mccormick variables across all elements
+    int gid                  = threadIdx.x + blockIdx.x * blockDim.x; // global id
+    int bid                  = blockIdx.x;                            // block id
+    int tid                  = threadIdx.x;                           // thread id inside block
+    int n_threads            = blockDim.x;                            // number of threads in a block
+    int n_blocks             = gridDim.x;                             // number of blocks in the grid  TODO: should probably be power of two for fast % operation
+    int n_doubles_per_mc     = 4 * (N + 1);                           // 4 for cv, cc, lb, ub
+    int n_out_doubles_per_mc = 2 * (N + 1);                           // 2 for cv, cc
+    int xid                  = gid / n_vars;                          // mccormick id in xs
 
     // block range when considering only mccormick values (for initial copy from global memory)
     // int n_elems_per_block = (n_elems + n_blocks - 1) >> int(log2(n_blocks));
@@ -172,8 +168,8 @@ kernel(T *in, T *out, int n_elems, int n_vars)
 
     // Copy results from shared to global memory
     int out_sh_mem_offset = compute_out_offset * n_doubles_per_mc;
-    int out_block_start   = n_elems_per_block * bid * n_doubles_per_mc;
-    int out_block_end     = min(out_block_start + n_elems_per_block * n_doubles_per_mc, n_elems * n_doubles_per_mc);
+    int out_block_start   = n_elems_per_block * bid * n_out_doubles_per_mc;
+    int out_block_end     = min(out_block_start + n_elems_per_block * n_out_doubles_per_mc, n_elems * n_out_doubles_per_mc);
     // TODO: unroll
     for (int i = tid + out_block_start; i < out_block_end; i += n_threads) {
         int sid = out_sh_mem_offset + i - out_block_start;
@@ -201,15 +197,16 @@ we should first try to make use of all the blocks individually doing one mccormi
 
 int main()
 {
-    constexpr int n_elems = 256;
-    constexpr int n_vars  = 32;
-    // constexpr int n_copy_doubles_per_mc = 4 + 2 * n_vars; // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
-    constexpr int n_copy_doubles_per_mc = 4 + 4 * n_vars; // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
+    constexpr int n_elems = 14;
+    constexpr int n_vars  = 16;
+    constexpr int n       = n_elems * n_vars;
+    constexpr int n_copy_doubles_per_mc = 2 * (n_vars + 1); // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
+    // constexpr int n_copy_doubles_per_mc = 4 + 4 * n_vars; // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
 
     constexpr int n_blocks  = 256;
     constexpr int n_threads = 256;
 
-    constexpr int n_tangents = 32; // the number of tangents to perform per mccormick relaxation
+    constexpr int n_tangents = 16; // the number of tangents to perform per mccormick relaxation, a multiple of 32 is ideal
 
     constexpr int n_elems_per_block = std::ceil(double(n_elems) / n_blocks);
     constexpr int n_vars_per_block  = n_vars * n_elems_per_block; // the number of mccormick variables to access in shared memory per block
@@ -234,25 +231,21 @@ int main()
     }
 #endif
 
-    // int n_bytes_shared = min(n_mccormick, n_elems * n_vars) * 4 * sizeof(double) * (min(n_tangents, n_vars) + 1); // TODO: what if n_vars > n_tangents?
-    constexpr int n_bytes_shared_in  = n_vars_per_block * 4 * sizeof(double) * (n_tangents + 1); // TODO: what if n_vars > n_tangents?
+    constexpr int n_bytes_shared_in  = n_vars_per_block * 4 * sizeof(double) * (n_tangents + 1);
     constexpr int n_bytes_shared_out = n_elems_per_block * 4 * sizeof(double) * (n_tangents + 1);
     constexpr int n_bytes_shared     = n_bytes_shared_in + n_bytes_shared_out;
     printf("n_bytes_shared = %d B\n", n_bytes_shared);
 
     double *d_xs;  // we only use a single double array for easier coalescing
     double *d_res; // same as above
-    CUDA_CHECK(cudaMalloc(&d_xs, n_elems * n_vars * sizeof(*xs)));
+    CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
     CUDA_CHECK(cudaMalloc(&d_res, (n_elems * n_copy_doubles_per_mc) * sizeof(*res)));
 
-    // Restructure the mccormick values to have coalesced access to shared memory in the device
-    // We first store all cv, then all cc values and so on, i.e. SOA instead of AOS.
-
     double *h_xs;
-    CUDA_CHECK(cudaMallocHost(&h_xs, n_elems * n_vars * sizeof(*xs))); // 4 because of cv, cc, lb, ub
-    memcpy(h_xs, xs, n_elems * n_vars * sizeof(*xs));
+    CUDA_CHECK(cudaMallocHost(&h_xs, n * sizeof(*xs))); // 4 because of cv, cc, lb, ub
+    memcpy(h_xs, xs, n * sizeof(*xs));
 
-    CUDA_CHECK(cudaMemcpy(d_xs, h_xs, n_elems * n_vars * sizeof(*xs), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_xs, h_xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
     kernel<double, n_tangents><<<n_blocks, n_threads, n_bytes_shared>>>(d_xs, d_res, n_elems, n_vars);
     CUDA_CHECK(cudaMemcpy(res, d_res, (n_elems * n_copy_doubles_per_mc) * sizeof(*d_res), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaDeviceSynchronize());
