@@ -517,6 +517,27 @@ fn tangent<T> copysign(tangent<T> mag, T sgn)
     return { copysign(mag.v, sgn), copysign(mag.d, sgn) };
 }
 
+template<typename T>
+fn tangent<T> erf(tangent<T> x)
+{
+    using std::erf;
+    using std::exp;
+    using std::pow;
+    using std::sqrt;
+
+    return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+}
+
+template<typename T>
+fn tangent<T> erfc(tangent<T> x)
+{
+    using std::erfc;
+    using std::exp;
+    using std::pow;
+    using std::sqrt;
+
+    return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+}
 #undef fn
 
 } // namespace cu
