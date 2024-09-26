@@ -538,6 +538,19 @@ fn tangent<T> erfc(tangent<T> x)
 
     return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
 }
+
+template<typename T>
+fn bool operator>(tangent<T> x, auto y)
+{
+    return x.v > y;
+}
+
+template<typename T>
+fn bool operator<(tangent<T> x, auto y)
+{
+    return x.v < y;
+}
+
 #undef fn
 
 } // namespace cu
