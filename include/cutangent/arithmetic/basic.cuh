@@ -376,8 +376,10 @@ fn tangent<T> sqrt(tangent<T> x)
 {
     using std::numeric_limits;
     using std::sqrt;
+
+    constexpr T zero {};
     // NOTE: We currently do not treat the case where x.v == 0, x.d > 0 to map to +inf.
-    return { sqrt(x.v), x.d / (2.0 * sqrt(x.v) + (x.v == static_cast<T>(0.0) ? numeric_limits<T>::min() : 0.0)) };
+    return { sqrt(x.v), x.d / (2.0 * sqrt(x.v) + (x.v == zero ? numeric_limits<T>::min() : zero)) };
 }
 
 template<typename T>
