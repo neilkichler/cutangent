@@ -26,6 +26,20 @@ struct tangent
 
     constexpr auto operator<=>(const tangent &other) const noexcept { return v <=> other.v; }
     constexpr bool operator==(const tangent &other) const noexcept { return v == other.v; }
+
+    constexpr tangent &operator+=(const tangent &other)
+    {
+        v += other.v;
+        d += other.d;
+        return *this;
+    }
+
+    constexpr tangent &operator-=(const tangent &other)
+    {
+        v -= other.v;
+        d -= other.d;
+        return *this;
+    }
 };
 
 template<typename T>
