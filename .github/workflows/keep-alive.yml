@@ -1,0 +1,34 @@
+name: Keep runners alive
+
+on:
+  schedule:
+    # times in UTC, standard Chron format
+    - cron:  '0 05 01,10,20 * *' # 5am 1st/10th/20th day of month
+    
+  workflow_dispatch:
+
+jobs: 
+  windows_gpu:
+    runs-on: [self-hosted,Windows]
+    steps:
+      - name: Windows keep alive
+        shell: powershell
+        run: Write-Host "Keep alive"
+      - name: GPU info
+        run: nvidia-smi
+
+  wsl_gpu:
+    runs-on: [self-hosted,WSL]
+    steps:
+      - name: WSL keep alive
+        run: echo "Keep alive"
+      - name: GPU info
+        run: nvidia-smi
+        
+  linux_gpu:
+    runs-on: [self-hosted,Linux]
+    steps:
+      - name: Linux keep alive
+        run: echo "Keep alive"
+      - name: GPU info
+        run: nvidia-smi
