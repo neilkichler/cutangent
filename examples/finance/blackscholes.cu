@@ -13,6 +13,8 @@
 namespace blackscholes
 {
 
+constexpr auto sqrt1_2 = 1.0 / std::numbers::sqrt2;
+
 template<typename T>
 struct parameters
 {
@@ -37,7 +39,7 @@ constexpr auto call(parameters<T> params)
 
     auto normcdf = [](auto x) {
         using std::erfc;
-        return 0.5 * erfc(-x * M_SQRT1_2);
+        return 0.5 * erfc(-x * sqrt1_2);
     };
 
     auto discount_factor = exp(-r * tau);
@@ -64,7 +66,7 @@ constexpr auto delta(parameters<T> params)
 
     auto normcdf = [](auto x) {
         using std::erfc;
-        return 0.5 * erfc(-x * 1.0 / std::numbers::sqrt2);
+        return 0.5 * erfc(-x * sqrt1_2);
     };
 
     auto discount_factor = exp(-r * tau);
@@ -115,7 +117,7 @@ int main()
     constexpr int n = 1;
 
     using T = cu::tangent<cu::mccormick<double>>;
-    blackscholes::parameters<T> xs[n]{};
+    blackscholes::parameters<T> xs[n] {};
     T res[n];
 
     // generate dummy data
