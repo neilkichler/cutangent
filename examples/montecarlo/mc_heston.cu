@@ -265,10 +265,10 @@ __global__ void heston_monte_carlo(curandState *rng_states, heston::parameters<T
             if (tid == 0) {
 #if RELAX
                 auto price_preview = ((accum / (jj + n_threads)) * exp(-r * tau));
-                printf("[gid:%3d][bid:%2d][tid:%3d] jj+nthreads: %d price cv is: %g %g\n",
-                       gid, bid, tid, jj + n_threads, price_preview.v.cv, price_preview.v.cc);
+                printf("[gid:%3d][bid:%2d][tid:%3d] price cv is: %g %g\n",
+                       gid, bid, tid, price_preview.v.cv, price_preview.v.cc);
 #else
-                printf("[gid:%3d][bid:%2d][tid:%3d] jj+nthreads: %d Accum payoff/price is: %g %g\n", gid, bid, tid, jj + n_threads, accum, (accum / (jj + n_threads)) * exp(-r * tau));
+                printf("[gid:%3d][bid:%2d][tid:%3d] Accum payoff/price is: %g %g\n", gid, bid, tid, accum, (accum / (jj + n_threads)) * exp(-r * tau));
 #endif
             }
         }
