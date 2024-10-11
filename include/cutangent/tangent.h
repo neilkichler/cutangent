@@ -9,6 +9,8 @@ namespace cu
 template<typename T>
 struct tangent
 {
+    using value_type = T;
+
     T v; // value
     T d; // derivative
 
@@ -49,7 +51,19 @@ constexpr T &value(tangent<T> &x)
 }
 
 template<typename T>
+constexpr const T &value(const tangent<T> &x)
+{
+    return x.v;
+}
+
+template<typename T>
 constexpr T &derivative(tangent<T> &x)
+{
+    return x.d;
+}
+
+template<typename T>
+constexpr const T &derivative(const tangent<T> &x)
 {
     return x.d;
 }
