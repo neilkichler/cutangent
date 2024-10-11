@@ -20,7 +20,11 @@ set_target_properties(mc PROPERTIES CUDA_ARCHITECTURES native)
 target_link_libraries(mc PRIVATE ${PROJECT_NAME})
 
 
-add_executable(mc_heston mc_heston.cu)
+# add_executable(mc_heston mc_heston.cu)
+# add_executable(mc_heston mc_heston_relaxed.cu)
+# add_executable(mc_heston mc_heston_dist.cu)
+add_executable(mc_heston mc_heston_tangent.cu)
+# add_executable(mc_heston mc_heston_bak.cu)
 target_link_libraries(mc_heston PRIVATE CUDA::cudart)
 target_link_libraries(mc_heston PRIVATE CUDA::curand)
 
