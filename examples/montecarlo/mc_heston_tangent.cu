@@ -20,6 +20,8 @@ namespace cg = cooperative_groups;
 
 thread_local double dummy = 0.0;
 
+constexpr int N_THREADS = 512;
+
 constexpr auto &value(auto &x) { return x; }
 constexpr auto &derivative(auto &x) { return dummy; }
 
@@ -107,8 +109,6 @@ __device__ void reduce_block(T *sum, cg::thread_block &cta, cg::thread_block_til
     cg::sync(cta);
 }
 
-constexpr int N_THREADS = 512;
-
 namespace monte_carlo
 {
 struct parameters
@@ -123,7 +123,8 @@ template<typename T>
 __global__ void heston_monte_carlo(monte_carlo::parameters mc_params,
                                    curandState *rng_states,
                                    heston::parameters<T> *ps,
-                                   auto *res)
+                                   T *tmp,
+                                   T *res)
 {
     using std::exp;
     using std::pow;
@@ -141,54 +142,83 @@ __global__ void heston_monte_carlo(monte_carlo::parameters mc_params,
     const int n_blocks  = gridDim.x;
     const int n_threads = blockDim.x;
 
+    const u64 n_paths_per_block = n_paths / n_blocks;
+
     __shared__ T payoffs[N_THREADS];
 
-    if (tid < n_paths) {
+    if (tid < n_threads) {
         payoffs[tid] = 0.0;
     }
     cg::sync(cta);
 
-    assert(n_steps % 2 == 0 && "n_steps must be even right now");
-
     curandState rng_state = rng_states[gid];
-    for (int i = bid; i < n_options; i += n_blocks) {
-        const auto [r, S0, tau, K, v0, rho_, kappa, theta, xi] = ps[i];
 
-        const auto rho = value(rho_);
+    int i = 0;
 
-        const auto dt = tau / n_steps;
+    const auto [r, S0, tau, K, v0, rho_, kappa, theta, xi] = ps[i];
 
-        T accum = 0.0;
+    const auto rho = value(rho_);
+    const auto dt  = tau / n_steps;
 
-        for (int j = tid; j < n_paths; j += n_threads) {
-            heston::state<T> state { .S_t = S0, .v_t = v0 };
-            double2 Z_t;
+    T accum = 0.0;
 
-            for (int k = 0; k < n_steps; k++) {
-                Z_t = curand_normal2_double(&rng_state);
+    for (int j = tid; j < n_paths_per_block; j += n_threads) {
+        heston::state<T> state { .S_t = S0, .v_t = v0 };
+        double2 Z_t;
 
-                // correlate the two random numbers
-                Z_t.y = rho * Z_t.x + sqrt(1.0 - pow(rho, 2)) * Z_t.y;
+        for (int k = 0; k < n_steps; k++) {
+            Z_t = curand_normal2_double(&rng_state);
 
-                state = heston::step(state, Z_t, dt, ps[i]);
-            }
+            // correlate the two random numbers
+            Z_t.y = rho * Z_t.x + sqrt(1.0 - pow(rho, 2)) * Z_t.y;
 
-            auto payoff  = european_call_payoff(state.S_t, K);
-            payoffs[tid] = payoff;
-
-            cg::sync(cta);
-
-            reduce_block<T>(payoffs, cta, tile32, &accum);
+            state = heston::step(state, Z_t, dt, ps[i]);
         }
 
+        auto payoff  = european_call_payoff(state.S_t, K);
+        payoffs[tid] = payoff;
+
+        cg::sync(cta);
+
+        reduce_block<T>(payoffs, cta, tile32, &accum);
+    }
+
+    if (tid == 0) {
+        tmp[bid] = accum;
+    }
+
+    rng_states[gid] = rng_state;
+}
+
+template<typename T>
+__global__ void heston_price_from_payoffs(monte_carlo::parameters mc_params,
+                                          curandState *rng_states,
+                                          heston::parameters<T> *ps,
+                                          T *tmp,
+                                          T *res)
+{
+    const auto [n_options, n_paths, n_steps] = mc_params;
+
+    cg::thread_block cta             = cg::this_thread_block();
+    cg::thread_block_tile<32> tile32 = cg::tiled_partition<32>(cta);
+
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    int i = 0; // we currently evaluate only one option
+
+    const auto [r, S0, tau, K, v0, rho_, kappa, theta, xi] = ps[i];
+
+    if (bid == 0) {
+        T final_payoff_sum = 0.0;
+        reduce_block<T>(tmp, cta, tile32, &final_payoff_sum);
+
         if (tid == 0) {
-            T call_price = (accum / n_paths) * exp(-r * tau);
+            T call_price = (final_payoff_sum / n_paths) * exp(-r * tau);
 
             res[i] = call_price;
         }
     }
-
-    rng_states[gid] = rng_state;
 }
 
 __global__ void rng_init(auto *rng_states)
@@ -202,13 +232,11 @@ __global__ void rng_init(auto *rng_states)
 
 int main()
 {
-    // constexpr int n         = 1;
-    constexpr int n         = 8;
+    constexpr int n         = 1;
     constexpr int n_threads = N_THREADS;
+    constexpr int n_blocks  = 1024;
 
-    using T = cu::tangent<cu::mccormick<double>>;
-    // using T = cu::tangent<double>;
-    // using T = double;
+    using T = cu::tangent<double>;
     heston::parameters<T> xs[n] {};
     T res[n];
 
@@ -225,20 +253,11 @@ int main()
         value(xs[i].xi)    = 0.61;
 
         // update seeds to compute derivative w.r.t S0
-        // derivative(xs[i].S0) = 1.0;
+        derivative(xs[i].S0) = 1.0;
     }
 
-    derivative(xs[0].S0) = 1.0;
-    derivative(xs[1].tau) = 1.0;
-    derivative(xs[2].K) = 1.0;
-    derivative(xs[3].v0) = 1.0;
-    derivative(xs[4].kappa) = 1.0;
-    derivative(xs[5].theta) = 1.0;
-    derivative(xs[6].xi) = 1.0;
-    derivative(xs[7].r) = 1.0;
-
     monte_carlo::parameters mc_params { .n_options = n,
-                                        .n_paths   = 1024 * N_THREADS,
+                                        .n_paths   = 1024 * 1024,
                                         .n_steps   = 1024 };
 
     std::cout << "---- Computing Delta ----" << std::endl;
@@ -247,40 +266,24 @@ int main()
 
     heston::parameters<T> *d_xs;
     T *d_res;
+    T *d_tmp;
     CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
     CUDA_CHECK(cudaMalloc(&d_res, n * sizeof(*res)));
+    CUDA_CHECK(cudaMalloc(&d_tmp, n_blocks * sizeof(*d_tmp)));
 
     curandState *rng_states;
-    CUDA_CHECK(cudaMalloc((void **)&rng_states, n * sizeof(curandState)));
-    CUDA_CHECK(cudaMemset(rng_states, 0, n * sizeof(curandState)));
-    rng_init<<<n, n_threads>>>(rng_states);
+    CUDA_CHECK(cudaMalloc((void **)&rng_states, n_blocks * n_threads * sizeof(curandState)));
+    CUDA_CHECK(cudaMemset(rng_states, 0, n_blocks * n_threads * sizeof(curandState)));
+    rng_init<<<n_blocks, n_threads>>>(rng_states);
 
     CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
-    heston_monte_carlo<<<n, n_threads>>>(mc_params, rng_states, d_xs, d_res);
+    heston_monte_carlo<<<n_blocks, n_threads>>>(mc_params, rng_states, d_xs, d_tmp, d_res);
+    heston_price_from_payoffs<<<1, n_blocks>>>(mc_params, rng_states, d_xs, d_tmp, d_res);
     CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
 
-    for (auto delta : res) {
-        std::cout << "Heston European call w.r.t. S0 (i.e., Delta): " << delta << std::endl;
+    for (auto value_and_delta : res) {
+        std::cout << "Heston European call w.r.t. S0 (i.e., Delta): " << value_and_delta << std::endl;
     }
-    //
-    // for (int i = 0; i < n; i++) {
-    //     // update seeds to compute derivative w.r.t v0 (i.e., compute Vega)
-    //     derivative(xs[i].S0) = 0.0;
-    //     derivative(xs[i].v0) = 1.0;
-    // }
-    //
-    // std::cout << "---- Computing Vega ----" << std::endl;
-    // std::cout << "S0: " << xs[0].S0 << std::endl;
-    // std::cout << "v0: " << xs[0].v0 << std::endl;
-    //
-    // rng_init<<<n, n_threads>>>(rng_states);
-    // CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
-    // heston_monte_carlo<<<n, n_threads>>>(mc_params, rng_states, d_xs, d_res);
-    // CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
-    //
-    // for (auto vega : res) {
-    //     std::cout << "Heston European call w.r.t. sigma (i.e., Vega): " << vega << std::endl;
-    // }
 
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_res));

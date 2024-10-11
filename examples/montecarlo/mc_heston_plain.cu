@@ -78,7 +78,7 @@ constexpr state<T> step(state<T> &state, const auto &Z_t, const auto &dt, const 
 }; // namespace heston
 
 template<typename T>
-__device__ void reduce_block(T *sum, cg::thread_block &cta, cg::thread_block_tile<32> &tile32, T *res)
+__device__ void reduce(T *sum, cg::thread_block &cta, cg::thread_block_tile<32> &tile32, T *res)
 {
     const int VEC = 32;
     const int tid = cta.thread_rank();
@@ -107,7 +107,7 @@ __device__ void reduce_block(T *sum, cg::thread_block &cta, cg::thread_block_til
     cg::sync(cta);
 }
 
-constexpr int N_THREADS = 512;
+constexpr int N_THREADS = 128;
 
 namespace monte_carlo
 {
@@ -178,7 +178,7 @@ __global__ void heston_monte_carlo(monte_carlo::parameters mc_params,
 
             cg::sync(cta);
 
-            reduce_block<T>(payoffs, cta, tile32, &accum);
+            reduce<T>(payoffs, cta, tile32, &accum);
         }
 
         if (tid == 0) {
@@ -202,12 +202,11 @@ __global__ void rng_init(auto *rng_states)
 
 int main()
 {
-    // constexpr int n         = 1;
-    constexpr int n         = 8;
+    constexpr int n         = 1;
     constexpr int n_threads = N_THREADS;
 
-    using T = cu::tangent<cu::mccormick<double>>;
-    // using T = cu::tangent<double>;
+    // using T = cu::tangent<cu::mccormick<double>>;
+    using T = cu::tangent<double>;
     // using T = double;
     heston::parameters<T> xs[n] {};
     T res[n];
@@ -225,17 +224,8 @@ int main()
         value(xs[i].xi)    = 0.61;
 
         // update seeds to compute derivative w.r.t S0
-        // derivative(xs[i].S0) = 1.0;
+        derivative(xs[i].S0) = 1.0;
     }
-
-    derivative(xs[0].S0) = 1.0;
-    derivative(xs[1].tau) = 1.0;
-    derivative(xs[2].K) = 1.0;
-    derivative(xs[3].v0) = 1.0;
-    derivative(xs[4].kappa) = 1.0;
-    derivative(xs[5].theta) = 1.0;
-    derivative(xs[6].xi) = 1.0;
-    derivative(xs[7].r) = 1.0;
 
     monte_carlo::parameters mc_params { .n_options = n,
                                         .n_paths   = 1024 * N_THREADS,
@@ -259,28 +249,26 @@ int main()
     heston_monte_carlo<<<n, n_threads>>>(mc_params, rng_states, d_xs, d_res);
     CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
 
-    for (auto delta : res) {
-        std::cout << "Heston European call w.r.t. S0 (i.e., Delta): " << delta << std::endl;
+    auto delta = res[0];
+    std::cout << "Heston European call w.r.t. S0 (i.e., Delta): " << delta << std::endl;
+
+    for (int i = 0; i < n; i++) {
+        // update seeds to compute derivative w.r.t v0 (i.e., compute Vega)
+        derivative(xs[i].S0) = 0.0;
+        derivative(xs[i].v0) = 1.0;
     }
-    //
-    // for (int i = 0; i < n; i++) {
-    //     // update seeds to compute derivative w.r.t v0 (i.e., compute Vega)
-    //     derivative(xs[i].S0) = 0.0;
-    //     derivative(xs[i].v0) = 1.0;
-    // }
-    //
-    // std::cout << "---- Computing Vega ----" << std::endl;
-    // std::cout << "S0: " << xs[0].S0 << std::endl;
-    // std::cout << "v0: " << xs[0].v0 << std::endl;
-    //
-    // rng_init<<<n, n_threads>>>(rng_states);
-    // CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
-    // heston_monte_carlo<<<n, n_threads>>>(mc_params, rng_states, d_xs, d_res);
-    // CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
-    //
-    // for (auto vega : res) {
-    //     std::cout << "Heston European call w.r.t. sigma (i.e., Vega): " << vega << std::endl;
-    // }
+
+    std::cout << "---- Computing Vega ----" << std::endl;
+    std::cout << "S0: " << xs[0].S0 << std::endl;
+    std::cout << "v0: " << xs[0].v0 << std::endl;
+
+    rng_init<<<n, n_threads>>>(rng_states);
+    CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
+    heston_monte_carlo<<<n, n_threads>>>(mc_params, rng_states, d_xs, d_res);
+    CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
+
+    auto vega = res[0];
+    std::cout << "Heston European call w.r.t. sigma (i.e., Vega): " << vega << std::endl;
 
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_res));
