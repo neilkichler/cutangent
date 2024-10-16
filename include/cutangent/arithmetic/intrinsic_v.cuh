@@ -90,7 +90,7 @@ inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const
     // multiple mccormick relaxations in one block
     int gid = blockIdx.x * blockDim.x + threadIdx.x;
     for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
-        res.ds[i] = add_down(a.ds[i], b.ds[i]);
+        res.ds[i] = add_up(a.ds[i], b.ds[i]);
     }
 
     // if (threadIdx.x == 0) {
