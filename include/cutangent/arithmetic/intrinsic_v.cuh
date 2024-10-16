@@ -48,18 +48,51 @@ using cu::tangents;
 //
 //     template<> inline __device__ tangent<double> fma_down  (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
 //     template<> inline __device__ tangent<double> fma_up    (tangent<double> x, tangent<double> y, tangent<double> z) { return x * y + z; }
+
+
+#if 0
+extern __shared__ double xs[];
+
+template<typename T, int N>
+__shared__ tangents<T, N> *tangents_block_buffer;
+
 template<int N>
 inline __device__ tangents<double, N> add_down(const tangents<double, N> &x, const tangents<double, N> &y)
 {
-    __shared__ tangents<double, N> res;
-    res.v = add_down(x.v, y.v);
+    // __shared__ tangents<double, N> res[4];
+
+    printf("intrinsic tangents_block_buffer: %p, el: %g\n", 
+           tangents_block_buffer<double, N>, tangents_block_buffer<double, N>[0].v);
+
+    // if (tid == 0) {
+        // printf("[gid:%3d][bid:%3d][tid:%3d][xid:%3d] xs: %p, xs[0]: %g\n", gid, bid, tid, xid, xs, xs[tid]);
+    // }
+
+    // tangents<double, N> res = (tangents<double, N> *)xs;
 
     // multiple mccormick relaxations in one block
     int gid = blockIdx.x * blockDim.x + threadIdx.x;
-    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
-        // printf("[gid: %3d][bid: %3d][tid: %3d] i: %3d\n", gid, blockIdx.x, threadIdx.x, i);
-        res.ds[i] = add_down(x.ds[i], y.ds[i]);
+
+    int rid = gid / N;
+
+    #if 0
+    // if (gid < N) {
+    if (gid > N and gid < 2 * N) {
+
+        res[rid].v = add_down(x.v, y.v);
+
+        for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+            // if (threadIdx.x == 0) {
+                printf("[gid: %4d][bid: %3d][tid: %3d][N:%3d] x.cv.v %g, y.cv.v %g, res.cv.v: %g\n",
+                       gid, blockIdx.x, threadIdx.x, N, x.v, y.v, res.v);
+            // }
+
+
+            res[rid].ds[i] = add_down(x.ds[i], y.ds[i]);
+        }
+
     }
+    #endif
 
     // if (threadIdx.x == 0) {
     //     res.v = add_down(x.v, y.v);
@@ -78,8 +111,27 @@ inline __device__ tangents<double, N> add_down(const tangents<double, N> &x, con
     // for (int i = 0; i < N; i++) {
     //     res.ds[i] = add_down(x.ds[i], y.ds[i]);
     // }
+    return {};
+    // return res;
+}
+#else
+
+template<int N>
+inline __device__ tangents<double, N> add_down(const tangents<double, N> &a, const tangents<double, N> &b)
+{
+    __shared__ tangents<double, N> res;
+    res.v = add_down(a.v, b.v);
+
+    // multiple mccormick relaxations in one block
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+        res.ds[i] = add_down(a.ds[i], b.ds[i]);
+    }
     return res;
 }
+
+
+#endif
 
 template<int N>
 inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const tangents<double, N> &b)
