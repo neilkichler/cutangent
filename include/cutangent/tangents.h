@@ -4,6 +4,10 @@
 #include <compare>
 #include <concepts>
 
+#ifndef CUTANGENT_USE_SHARED_MEMORY
+#define CUTANGENT_USE_SHARED_MEMORY 1
+#endif
+
 namespace cu
 {
 

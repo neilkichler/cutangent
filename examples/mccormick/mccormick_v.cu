@@ -16,9 +16,9 @@
 #define USE_VECTOR_LOAD_128 0
 #define USE_VECTOR_LOAD_256 0
 
-constexpr auto f(const auto &x, const auto &y, const auto &z, const auto &w)
+constexpr __device__ auto f(const auto &x, const auto &y, const auto &z, const auto &w)
 {
-    auto a = x + y + z + w;
+    auto a = x * y + z + w;
     return a;
 }
 
