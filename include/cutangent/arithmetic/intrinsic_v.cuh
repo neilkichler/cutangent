@@ -122,11 +122,35 @@ inline __device__ tangents<double, N> add_down(const tangents<double, N> &a, con
     __shared__ tangents<double, N> res;
     res.v = add_down(a.v, b.v);
 
-    // multiple mccormick relaxations in one block
+    // multiple mccormick relaxations in one block (not supported yet)
     int gid = blockIdx.x * blockDim.x + threadIdx.x;
-    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+
+    int n_threads = blockDim.x;
+    int i = tid;
+
+    // shouldn't this start with tid?
+    // for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+    // for (int i = tid; i < n_threads; i += blockDim.x * gridDim.x) {
+    if (i < n_threads) {
         res.ds[i] = add_down(a.ds[i], b.ds[i]);
+
+        if (blockIdx.x == 1) {
+            printf("[gid:%3d][bid:%3d][tid:%3d] a.v = %g a.ds[%d] = %g a.ds[%d] = %g, b.v = %g b.ds[%d] = %g b.ds[%d] = %g, res.v = %g ds[%d] = %g ds[%d] = %g\n", 
+                   gid, bid, tid, a.v,
+                   i, a.ds[i],
+                   i, a.ds[i],
+                   b.v,
+                   i, b.ds[i],
+                   i, b.ds[i],
+                   res.v,
+                   i, res.ds[i],
+                   i, res.ds[i]);
+        }
     }
+
+
     return res;
 }
 
@@ -139,11 +163,19 @@ inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const
     __shared__ tangents<double, N> res;
     res.v = add_up(a.v, b.v);
 
-    // multiple mccormick relaxations in one block
-    int gid = blockIdx.x * blockDim.x + threadIdx.x;
-    for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+    int n_threads = blockDim.x;
+
+    int i = threadIdx.x;
+    if (i < n_threads) {
         res.ds[i] = add_up(a.ds[i], b.ds[i]);
     }
+
+
+    // // multiple mccormick relaxations in one block
+    // int gid = blockIdx.x * blockDim.x + threadIdx.x;
+    // for (int i = gid % N; i < N; i += blockDim.x * gridDim.x) {
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
 
     // if (threadIdx.x == 0) {
     //     res.v = add_up(a.v, b.v);
