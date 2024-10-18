@@ -82,7 +82,7 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
     }
 #endif
 
-    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+    CUTANGENT_CONSERVATIVE_WARP_SYNC;
 
     int compute_out_offset  = n_elems_per_block * n_vars;
 
@@ -107,7 +107,7 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
         xs[rid].box.ub.v = res.box.ub.v;
     }
 
-    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+    CUTANGENT_CONSERVATIVE_WARP_SYNC;
 
     // Copy results from shared to global memory
     int out_sh_mem_offset = compute_out_offset * n_doubles_per_mc;

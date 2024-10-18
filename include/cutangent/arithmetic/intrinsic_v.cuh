@@ -110,7 +110,7 @@ inline __device__ tangents<double, N> add_down(const tangents<double, N> &a, con
     // }
 
 
-    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+    CUTANGENT_CONSERVATIVE_WARP_SYNC;
 
     // printf("[tid:%3d] add_down\n", i);
 
@@ -162,7 +162,7 @@ inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const
 
 
 
-    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+    CUTANGENT_CONSERVATIVE_WARP_SYNC;
     return res;
 }
 

@@ -15,7 +15,7 @@
 // NOTE: Used in places where racecheck finds programming model hazards
 //       but internal assumptions make it save to not use a sync
 #if CUTANGENT_USE_CONSERVATIVE_WARP_SYNC
-#define CUTANGENT_CONSERVATIVE_WARP_SYNC __syncwarp
+#define CUTANGENT_CONSERVATIVE_WARP_SYNC __syncwarp()
 #else
 #define CUTANGENT_CONSERVATIVE_WARP_SYNC
 #endif
