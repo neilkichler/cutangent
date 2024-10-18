@@ -18,7 +18,7 @@
 
 constexpr __device__ auto f(const auto &x, const auto &y, const auto &z, const auto &w)
 {
-    auto a = x * y + z + w;
+    auto a = x + y + z + w;
     return a;
 }
 
@@ -48,7 +48,7 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
     int t_block_end                     = min(t_block_start + n_elems_per_block_with_tangents, n_elems * n_vars * n_doubles_per_mc);
 
     // seed tangents
-    for (int i = tid + t_block_start; i < t_block_end; i += n_threads) { // TODO: unroll
+    for (int i = tid + t_block_start; i < t_block_end; i += n_threads) {
         int v           = i / n_doubles_per_mc;
         int tangent_idx = (i % (N + 1)) - 1;                                    // tangent index for this thread, -1 is no tangent but a value to be skipped
                                                                                 // faster alternative: int tangent_idx = x - floor(1/(N+1) * x) * (N+1) - 1; // TODO: check if compiler figures this out
@@ -82,40 +82,39 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
     }
 #endif
 
-    __syncthreads();
+    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+
+    int compute_out_offset  = n_elems_per_block * n_vars;
+
+    // result id in shared memory - offset exists to not overwrite inputs that might be used for different sets of seed tangents
+    int rid = compute_out_offset;
 
     // Actual computation
-    int compute_out_offset  = n_elems_per_block * n_vars;
-    int compute_block_start = n_elems_per_block * bid * N;
-    int compute_block_end   = min(compute_block_start + n_elems_per_block * N, n_elems * N);
+    auto res = f(xs[0], xs[1], xs[8], xs[11]);
 
-    int rid = compute_out_offset; // result id in shared memory - offset exists to not overwrite inputs that might be used for different sets of seed tangents
-
-    for (int i = tid + compute_block_start; i < compute_block_end; i += n_threads) { // TODO: unroll
-        auto res = f(xs[0], xs[1], xs[2], xs[7]);
-
-        xs[rid].cv.ds[tid]     = res.cv.ds[tid];
-        xs[rid].cc.ds[tid]     = res.cc.ds[tid];
-        xs[rid].box.lb.ds[tid] = res.box.lb.ds[tid];
-        xs[rid].box.ub.ds[tid] = res.box.ub.ds[tid];
-
-        if (tid == 0) {
-            // put res.v into shared memory only once
-            xs[rid].cv.v     = res.cv.v;
-            xs[rid].cc.v     = res.cc.v;
-            xs[rid].box.lb.v = res.box.lb.v;
-            xs[rid].box.ub.v = res.box.ub.v;
-        }
+    for (int i = tid; i < N; i += n_threads) {
+        xs[rid].cv.ds[i]     = res.cv.ds[i];
+        xs[rid].cc.ds[i]     = res.cc.ds[i];
+        xs[rid].box.lb.ds[i] = res.box.lb.ds[i];
+        xs[rid].box.ub.ds[i] = res.box.ub.ds[i];
     }
 
-    __syncthreads();
+    if (tid == 0) {
+        // put res.v into shared memory only once
+        xs[rid].cv.v     = res.cv.v;
+        xs[rid].cc.v     = res.cc.v;
+        xs[rid].box.lb.v = res.box.lb.v;
+        xs[rid].box.ub.v = res.box.ub.v;
+    }
+
+    CUTANGENT_CONSERVATIVE_WARP_SYNC();
 
     // Copy results from shared to global memory
     int out_sh_mem_offset = compute_out_offset * n_doubles_per_mc;
     int out_block_start   = n_elems_per_block * bid * n_out_doubles_per_mc;
     int out_block_end     = min(out_block_start + n_elems_per_block * n_out_doubles_per_mc, n_elems * n_out_doubles_per_mc);
 
-    for (int i = tid + out_block_start; i < out_block_end; i += n_threads) { // TODO: unroll
+    for (int i = tid + out_block_start; i < out_block_end; i += n_threads) {
         int sid = out_sh_mem_offset + i - out_block_start;
         out[i]  = ((double *)xs)[sid];
     }
@@ -124,21 +123,23 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
 int main()
 {
     constexpr int n_elems               = 8;
-    constexpr int n_vars                = 16;
+    constexpr int n_vars                = 32;
     constexpr int n                     = n_elems * n_vars;
     constexpr int n_copy_doubles_per_mc = 2 * (n_vars + 1); // the number of doubles to copy from device back to host per mccormick relaxation. Skips box derivatives. Take cv, cc, lb, ub, cv.ds, cc.ds
 
     constexpr int n_blocks  = 10;
-    constexpr int n_threads = 8;
+    constexpr int n_threads = 32;
 
-    constexpr int n_tangents = 16; // the number of tangents to perform per mccormick relaxation, a multiple of 32 is ideal
+    // The number of tangents to perform per mccormick relaxation. 
+    // A multiple of 32 is ideal and n_tangents=n_vars is best if it fits into shared memory
+    constexpr int n_tangents = 32;
 
     constexpr int n_elems_per_block = std::ceil(double(n_elems) / n_blocks);
     constexpr int n_vars_per_block  = n_vars * n_elems_per_block; // the number of mccormick variables to access in shared memory per block
 
     static_assert(n_tangents <= n_vars, "n_tangents must be <= n_vars");
-
     static_assert(n_blocks >= n_elems, "n_blocks must be >= n_elems for now");
+    static_assert(n_threads <= n_tangents, "it currently doesn't make sense to have more threads than tangents since we don't perform multiple elements in a block at a time");
 
     cu::mccormick<double> xs[n_elems * n_vars] {};
     double res[n_elems * n_copy_doubles_per_mc] {};
@@ -162,7 +163,7 @@ int main()
     CUDA_CHECK(cudaMalloc(&d_res, (n_elems * n_copy_doubles_per_mc) * sizeof(*res)));
 
     double *h_xs;
-    CUDA_CHECK(cudaMallocHost(&h_xs, n * sizeof(*xs))); // 4 because of cv, cc, lb, ub
+    CUDA_CHECK(cudaMallocHost(&h_xs, n * sizeof(*xs)));
     memcpy(h_xs, xs, n * sizeof(*xs));
 
     CUDA_CHECK(cudaMemcpy(d_xs, h_xs, n * sizeof(*xs), cudaMemcpyHostToDevice));

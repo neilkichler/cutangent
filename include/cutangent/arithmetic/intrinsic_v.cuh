@@ -78,9 +78,41 @@ template<int N>
 inline __device__ tangents<double, N> add_down(const tangents<double, N> &a, const tangents<double, N> &b)
 {
     CUTANGENT_SHARED tangents<double, N> res;
-    res.v = add_down(a.v, b.v);
-    int i = threadIdx.x;
-    res.ds[i] = add_down(a.ds[i], b.ds[i]);
+
+    if (threadIdx.x == 0) {
+        res.v = add_down(a.v, b.v);
+    }
+
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+        res.ds[i] = add_down(a.ds[i], b.ds[i]);
+    }
+
+    // if (threadIdx.x == 0) {
+    //     res.v = add_down(a.v, b.v);
+    // } else {
+    //     for (int i = threadIdx.x - 1; i < N; i += blockDim.x) {
+    //         res.ds[i] = add_down(a.ds[i], b.ds[i]);
+    //     }
+    // }
+
+    // int tid = threadIdx.x;
+    //
+    // if (tid == 0) {
+    //     res.v = add_down(a.v, b.v);
+    // } else if (tid < N) {
+    //     int i = tid;
+    //     res.ds[i] = add_down(a.ds[i], b.ds[i]);
+    // }
+    //
+    // __syncwarp();
+    // for (int i = tid + blockDim.x; i < N; i += blockDim.x) {
+    //     res.ds[i] = add_down(a.ds[i], b.ds[i]);
+    // }
+
+
+    CUTANGENT_CONSERVATIVE_WARP_SYNC();
+
+    // printf("[tid:%3d] add_down\n", i);
 
     return res;
 }
@@ -89,9 +121,48 @@ template<int N>
 inline __device__ tangents<double, N> add_up(const tangents<double, N> &a, const tangents<double, N> &b)
 {
     CUTANGENT_SHARED tangents<double, N> res;
-    res.v = add_up(a.v, b.v);
-    int i = threadIdx.x;
-    res.ds[i] = add_up(a.ds[i], b.ds[i]);
+
+
+    if (threadIdx.x == 0) {
+        res.v = add_up(a.v, b.v);
+    }
+
+    for (int i = threadIdx.x; i < N; i += blockDim.x) {
+        res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    }
+
+
+    // // res.v = add_up(a.v, b.v);
+    // if (threadIdx.x == 0) {
+    //     res.v = add_up(a.v, b.v);
+    // } else {
+    // // int i = threadIdx.x;
+    // // __syncwarp();
+    //     for (int i = threadIdx.x - 1; i < N; i += blockDim.x) {
+    //         res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    //     }
+    // }
+
+
+    // int tid = threadIdx.x;
+    //
+    // if (tid == 0) {
+    //     res.v = add_up(a.v, b.v);
+    // } else if (tid < N) {
+    //     int i = tid;
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
+    //
+    // __syncwarp();
+    //
+    // for (int i = tid + blockDim.x; i < N; i += blockDim.x) {
+    //     res.ds[i] = add_up(a.ds[i], b.ds[i]);
+    // }
+
+
+
+
+    CUTANGENT_CONSERVATIVE_WARP_SYNC();
     return res;
 }
 
