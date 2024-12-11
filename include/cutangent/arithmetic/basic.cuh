@@ -5,14 +5,14 @@
 
 #include <algorithm>
 #include <cmath>
-#include <type_traits>
 #include <numbers>
+#include <type_traits>
 
 namespace cu
 {
 
-template <typename T>
-concept Number = std::is_arithmetic_v<T>;
+template<typename T>
+concept arithmetic = std::is_arithmetic_v<T>;
 
 #define fn inline constexpr __device__
 
@@ -41,7 +41,7 @@ fn tangent<T> operator+(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator+(tangent<T> a, Number auto b)
+fn tangent<T> operator+(tangent<T> a, arithmetic auto b)
 {
     return { a.v + b, a.d };
 }
@@ -101,13 +101,13 @@ fn tangent<T> operator*(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator*(tangent<T> a, Number auto b)
+fn tangent<T> operator*(tangent<T> a, arithmetic auto b)
 {
     return { a.v * b, a.d * b };
 }
 
 template<typename T>
-fn tangent<T> operator*(Number auto a, tangent<T> b)
+fn tangent<T> operator*(arithmetic auto a, tangent<T> b)
 {
     return b * a;
 }
@@ -131,13 +131,13 @@ fn tangent<T> operator/(tangent<T> a, T b)
 }
 
 template<typename T>
-fn tangent<T> operator/(Number auto a, tangent<T> b)
+fn tangent<T> operator/(arithmetic auto a, tangent<T> b)
 {
     return { a / b.v, (-a * b.d) / (b.v * b.v) };
 }
 
 template<typename T>
-fn tangent<T> operator/(tangent<T> a, Number auto b)
+fn tangent<T> operator/(tangent<T> a, arithmetic auto b)
 {
     return { a.v / b, a.d / b };
 }
