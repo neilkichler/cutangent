@@ -47,7 +47,7 @@ fn tangent<T> operator+(tangent<T> a, arithmetic auto b)
 }
 
 template<typename T>
-fn tangent<T> operator+(auto a, tangent<T> b)
+fn tangent<T> operator+(arithmetic auto a, tangent<T> b)
 {
     return { a + b.v, b.d };
 }
@@ -65,7 +65,7 @@ fn tangent<T> operator-(tangent<T> a, T b)
 }
 
 template<typename T>
-fn tangent<T> operator-(tangent<T> a, auto b)
+fn tangent<T> operator-(tangent<T> a, arithmetic auto b)
 {
     return { a.v - b, a.d };
 }
@@ -77,7 +77,7 @@ fn tangent<T> operator-(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator-(auto a, tangent<T> b)
+fn tangent<T> operator-(arithmetic auto a, tangent<T> b)
 {
     return { a - b.v, -b.d };
 }
