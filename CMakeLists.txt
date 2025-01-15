@@ -21,6 +21,10 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # Let's nicely support folders in IDEs
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+  set(${PROJECT_NAME}_WARNINGS_AS_ERRORS OFF)
+  include(cmake/warnings.cmake)
+  add_warnings_target(warnings ${${PROJECT_NAME}_WARNINGS_AS_ERRORS})
+
   # Include example programs
   add_subdirectory(examples)
 

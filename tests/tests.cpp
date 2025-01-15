@@ -2,7 +2,7 @@
 
 #include <array>
 
-int main(int argc, char *argv[])
+int main()
 {
     CUDA_CHECK(cudaSetDevice(0));
 
