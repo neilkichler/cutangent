@@ -143,6 +143,34 @@ fn tangent<T> operator/(tangent<T> a, arithmetic auto b)
 }
 
 template<typename T>
+fn tangent<T> &operator+=(tangent<T> &a, auto b)
+{
+    a = a + b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator-=(tangent<T> &a, auto b)
+{
+    a = a - b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator*=(tangent<T> &a, auto b)
+{
+    a = a * b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator/=(tangent<T> &a, auto b)
+{
+    a = a / b;
+    return a;
+}
+
+template<typename T>
 fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
     using std::max;
