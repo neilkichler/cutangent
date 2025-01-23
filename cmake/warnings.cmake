@@ -102,8 +102,10 @@ function(add_warnings_target tgt_name warnings_as_errors)
             target_compile_options(${tgt_name} INTERFACE
             $<$<COMPILE_LANGUAGE:${LANG}>:$<BUILD_INTERFACE:${COMMON_WARNINGS_${LANG}} ${CLANG_WARNINGS_${LANG}}>>)
         elseif (CMAKE_${LANG}_COMPILER_ID MATCHES "NVIDIA")
-            target_compile_options(${tgt_name} INTERFACE
-            $<$<COMPILE_LANGUAGE:${LANG}>:$<BUILD_INTERFACE:${NVCC_WARNINGS_${LANG}}>>)
+            if(NOT WIN32) # Currently warnings with nvcc on windows are problematic
+                target_compile_options(${tgt_name} INTERFACE
+                $<$<COMPILE_LANGUAGE:${LANG}>:$<BUILD_INTERFACE:${NVCC_WARNINGS_${LANG}}>>)
+            endif()
         elseif (CMAKE_${LANG}_COMPILER_ID MATCHES "MSVC")
             target_compile_options(${tgt_name} INTERFACE
                 $<$<COMPILE_LANGUAGE:${LANG}>:$<BUILD_INTERFACE:${MSVC_WARNINGS_${LANG}}>>)
