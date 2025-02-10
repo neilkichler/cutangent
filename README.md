@@ -10,7 +10,7 @@ CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangen
 ### System-wide
 ```bash
 git clone https://github.com/neilkichler/cutangent.git
-cd cuinterval
+cd cutangent
 cmake --preset release
 cmake --build build
 cmake --install build
