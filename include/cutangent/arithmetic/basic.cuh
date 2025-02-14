@@ -5,11 +5,14 @@
 
 #include <algorithm>
 #include <cmath>
-#include <concepts>
 #include <numbers>
+#include <type_traits>
 
 namespace cu
 {
+
+template<typename T>
+concept arithmetic = std::is_arithmetic_v<T>;
 
 #define fn inline constexpr __device__
 
@@ -62,7 +65,7 @@ fn tangent<T> operator-(tangent<T> a, T b)
 }
 
 template<typename T>
-fn tangent<T> operator-(tangent<T> a, auto b)
+fn tangent<T> operator-(tangent<T> a, arithmetic auto b)
 {
     return { a.v - b, a.d };
 }
@@ -74,7 +77,7 @@ fn tangent<T> operator-(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator-(auto a, tangent<T> b)
+fn tangent<T> operator-(arithmetic auto a, tangent<T> b)
 {
     return { a - b.v, -b.d };
 }
@@ -98,25 +101,13 @@ fn tangent<T> operator*(T a, tangent<T> b)
 }
 
 template<typename T>
-fn tangent<T> operator*(tangent<T> a, std::integral auto b)
+fn tangent<T> operator*(tangent<T> a, arithmetic auto b)
 {
     return { a.v * b, a.d * b };
 }
 
 template<typename T>
-fn tangent<T> operator*(std::integral auto a, tangent<T> b)
-{
-    return b * a;
-}
-
-template<typename T>
-fn tangent<T> operator*(tangent<T> a, auto b)
-{
-    return { a.v * b, a.d * b };
-}
-
-template<typename T>
-fn tangent<T> operator*(auto a, tangent<T> b)
+fn tangent<T> operator*(arithmetic auto a, tangent<T> b)
 {
     return b * a;
 }
@@ -140,15 +131,43 @@ fn tangent<T> operator/(tangent<T> a, T b)
 }
 
 template<typename T>
-fn tangent<T> operator/(std::integral auto a, tangent<T> b)
+fn tangent<T> operator/(arithmetic auto a, tangent<T> b)
 {
     return { a / b.v, (-a * b.d) / (b.v * b.v) };
 }
 
 template<typename T>
-fn tangent<T> operator/(tangent<T> a, std::integral auto b)
+fn tangent<T> operator/(tangent<T> a, arithmetic auto b)
 {
     return { a.v / b, a.d / b };
+}
+
+template<typename T>
+fn tangent<T> &operator+=(tangent<T> &a, auto b)
+{
+    a = a + b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator-=(tangent<T> &a, auto b)
+{
+    a = a - b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator*=(tangent<T> &a, auto b)
+{
+    a = a * b;
+    return a;
+}
+
+template<typename T>
+fn tangent<T> &operator/=(tangent<T> &a, auto b)
+{
+    a = a / b;
+    return a;
 }
 
 template<typename T>

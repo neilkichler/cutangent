@@ -4,7 +4,7 @@ include(FetchContent)
 FetchContent_Declare(
   ut
   GIT_REPOSITORY https://github.com/boost-ext/ut.git
-  GIT_TAG v2.0.1
+  GIT_TAG v2.1.1
   EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(ut)
@@ -25,7 +25,7 @@ set_target_properties(tests PROPERTIES CUDA_ARCHITECTURES native)
 set_target_properties(tests PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Link with main library and testing library
-target_link_libraries(tests PRIVATE cutangent ut)
+target_link_libraries(tests PRIVATE cutangent ut warnings)
 
 # Find and link with CUDA headers
 find_package(CUDAToolkit REQUIRED)
