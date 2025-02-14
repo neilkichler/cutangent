@@ -16,10 +16,9 @@
 #define USE_VECTOR_LOAD_128 0
 #define USE_VECTOR_LOAD_256 0
 
-constexpr __device__ auto f(const auto &x, const auto &y, const auto &z, const auto &w)
+constexpr auto f(auto *xs)
 {
-    auto a = x + y + z + w;
-    return a;
+    return xs[0] + xs[1] + xs[8] + xs[11];
 }
 
 template<typename T, int N>
@@ -84,13 +83,13 @@ tangents_of_mccormick_from_single_elem_per_block(T *in, T *out, int n_elems, int
 
     CUTANGENT_CONSERVATIVE_WARP_SYNC;
 
-    int compute_out_offset  = n_elems_per_block * n_vars;
+    int compute_out_offset = n_elems_per_block * n_vars;
 
     // result id in shared memory - offset exists to not overwrite inputs that might be used for different sets of seed tangents
     int rid = compute_out_offset;
 
     // Actual computation
-    auto res = f(xs[0], xs[1], xs[8], xs[11]);
+    auto res = f(xs);
 
     for (int i = tid; i < N; i += n_threads) {
         xs[rid].cv.ds[i]     = res.cv.ds[i];
@@ -130,7 +129,7 @@ int main()
     constexpr int n_blocks  = 10;
     constexpr int n_threads = 32;
 
-    // The number of tangents to perform per mccormick relaxation. 
+    // The number of tangents to perform per mccormick relaxation.
     // A multiple of 32 is ideal and n_tangents=n_vars is best if it fits into shared memory
     constexpr int n_tangents = 32;
 
