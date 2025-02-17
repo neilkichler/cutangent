@@ -4,6 +4,8 @@
 #include <cutangent/arithmetic/basic.cuh>
 #include <cutangent/tangent.h>
 
+#include <limits>
+
 #pragma nv_diagnostic push
 // ignore "821: function was referenced but not defined" for e.g. add_down since
 // this has to be defined by the type and is only included in an upstream project.
@@ -64,8 +66,8 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> next_after(tangent<double> x, tangent<double> y) { using std::nextafter; return { nextafter(x.v, y.v), x.d }; }
     template<> inline __device__ tangent<double> rcp_down  (tangent<double> x) { using std::pow; return { __drcp_rd(x.v), - __dmul_rd(pow(x.v, -2.0), x.d) }; }
     template<> inline __device__ tangent<double> rcp_up    (tangent<double> x) { using std::pow; return { __drcp_ru(x.v), - __dmul_ru(pow(x.v, -2.0), x.d) }; }
-    template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { return sqrt(x); }
-    template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { return sqrt(x); }
+    template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { auto sqrt_x_v = sqrt_down(x.v); return { sqrt_x_v, div_down(x.d, add_up  (2.0 * sqrt_x_v, x.v == 0.0 ? std::numeric_limits<double>::min() : 0.0)) }; }
+    template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { auto sqrt_x_v = sqrt_up  (x.v); return { sqrt_x_v, div_up  (x.d, add_down(2.0 * sqrt_x_v, x.v == 0.0 ? std::numeric_limits<double>::min() : 0.0)) }; }
     template<> inline __device__ tangent<double> int_down  (tangent<double> x) { return floor(x); }
     template<> inline __device__ tangent<double> int_up    (tangent<double> x) { return ceil(x); }
     // template<> inline __device__ double trunc     (double x)           { return ::trunc(x); }
