@@ -193,16 +193,21 @@ fn tangent<T> abs(tangent<T> x)
 {
     using std::abs;
     using std::copysign;
-    // NOTE: not differentiable at x = 0.
-    return { abs(x.v), copysign(1.0, x.v) * x.d };
+
+
+    constexpr T zero {};
+    if (x.v == zero) {
+        // NOTE: abs is not differentiable at x = 0. We take the subgradient at x = 0 to be zero.
+        return { zero, zero };
+    } else {
+        return { abs(x.v), copysign(1.0, x.v) * x.d };
+    }
 }
 
 template<typename T>
 fn tangent<T> clamp(tangent<T> v, tangent<T> lb, tangent<T> ub)
 {
-    using std::clamp;
-
-    return { clamp(v.v, lb.v, ub.v), lb.d * (v.v < lb.v) + ub.d * (v.v > ub.v) };
+    return max(lb, min(v, ub));
 }
 
 template<typename T>
