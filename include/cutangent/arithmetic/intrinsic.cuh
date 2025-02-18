@@ -4,6 +4,8 @@
 #include <cutangent/arithmetic/basic.cuh>
 #include <cutangent/tangent.h>
 
+#include <limits>
+
 #pragma nv_diagnostic push
 // ignore "821: function was referenced but not defined" for e.g. add_down since
 // this has to be defined by the type and is only included in an upstream project.
@@ -47,25 +49,25 @@ namespace cu::intrinsic
 
     using cu::tangent;
 
-    template<> inline __device__ tangent<double> fma_down  (tangent<double> x, tangent<double> y, tangent<double> z) { return fma_down(x.v, y.d, fma_down(x.d, y.v, z.d)); }
-    template<> inline __device__ tangent<double> fma_up    (tangent<double> x, tangent<double> y, tangent<double> z) { return fma_up(x.v, y.d, fma_up(x.d, y.v, z.d)); }
-    template<> inline __device__ tangent<double> add_down  (const tangent<double> &x, const tangent<double> &y) { return { add_down(x.v, y.v), add_down(x.d, y.d) }; }
-    template<> inline __device__ tangent<double> add_up    (const tangent<double> &x, const tangent<double> &y) { return { add_up(x.v, y.v), add_up(x.d, y.d) }; }
-    template<> inline __device__ tangent<double> sub_down  (tangent<double> x, tangent<double> y) { return x - y; }
-    template<> inline __device__ tangent<double> sub_up    (tangent<double> x, tangent<double> y) { return x - y; }
-    template<> inline __device__ tangent<double> mul_down  (tangent<double> x, tangent<double> y) { return x * y; }
-    template<> inline __device__ tangent<double> mul_up    (tangent<double> x, tangent<double> y) { return x * y; }
-    template<> inline __device__ tangent<double> div_down  (tangent<double> x, tangent<double> y) { return x / y; }
-    template<> inline __device__ tangent<double> div_up    (tangent<double> x, tangent<double> y) { return x / y; }
-    template<> inline __device__ tangent<double> median    (tangent<double> x, tangent<double> y) { return (x + y) * .5; }
-    template<> inline __device__ tangent<double> min       (tangent<double> x, tangent<double> y) { return min(x, y); }
-    template<> inline __device__ tangent<double> max       (tangent<double> x, tangent<double> y) { return max(x, y); }
+    template<> inline __device__ tangent<double> fma_down  (tangent<double> x, tangent<double> y, tangent<double> z) { return { fma_down(x.v, y.v, z.v), fma_down(x.v, y.d, fma_down(x.d, y.v, z.d)) }; }
+    template<> inline __device__ tangent<double> fma_up    (tangent<double> x, tangent<double> y, tangent<double> z) { return { fma_up  (x.v, y.v, z.v), fma_up  (x.v, y.d, fma_up  (x.d, y.v, z.d)) }; }
+    template<> inline __device__ tangent<double> add_down  (tangent<double> x, tangent<double> y)                    { return { add_down(x.v, y.v), add_down(x.d, y.d) }; }
+    template<> inline __device__ tangent<double> add_up    (tangent<double> x, tangent<double> y)                    { return { add_up  (x.v, y.v), add_up  (x.d, y.d) }; }
+    template<> inline __device__ tangent<double> sub_down  (tangent<double> x, tangent<double> y)                    { return { sub_down(x.v, y.v), sub_down(x.d, y.d) }; }
+    template<> inline __device__ tangent<double> sub_up    (tangent<double> x, tangent<double> y)                    { return { sub_up  (x.v, y.v), sub_up  (x.d, y.d) }; }
+    template<> inline __device__ tangent<double> mul_down  (tangent<double> x, tangent<double> y)                    { return { mul_down(x.v, y.v), fma_down(x.v, y.d, mul_down(x.d, y.v)) }; }
+    template<> inline __device__ tangent<double> mul_up    (tangent<double> x, tangent<double> y)                    { return { mul_up  (x.v, y.v), fma_up  (x.v, y.d, mul_up  (x.d, y.v)) }; }
+    template<> inline __device__ tangent<double> div_down  (tangent<double> x, tangent<double> y)                    { return { div_down(x.v, y.v), div_down(fma_down(x.d, y.v, -mul_up  (x.v, y.d)), mul_up  (y.v, y.v)) }; }
+    template<> inline __device__ tangent<double> div_up    (tangent<double> x, tangent<double> y)                    { return { div_up  (x.v, y.v), div_up  (fma_up  (x.d, y.v, -mul_down(x.v, y.d)), mul_down(y.v, y.v)) }; }
+    template<> inline __device__ tangent<double> median    (tangent<double> x, tangent<double> y)                    { return (x + y) * .5; }
+    template<> inline __device__ tangent<double> min       (tangent<double> x, tangent<double> y)                    { return min(x, y); }
+    template<> inline __device__ tangent<double> max       (tangent<double> x, tangent<double> y)                    { return max(x, y); }
     // template<> inline __device__ double copy_sign (double x, double y) { return copysign(x, y); }
     template<> inline __device__ tangent<double> next_after(tangent<double> x, tangent<double> y) { using std::nextafter; return { nextafter(x.v, y.v), x.d }; }
     template<> inline __device__ tangent<double> rcp_down  (tangent<double> x) { using std::pow; return { __drcp_rd(x.v), - __dmul_rd(pow(x.v, -2.0), x.d) }; }
     template<> inline __device__ tangent<double> rcp_up    (tangent<double> x) { using std::pow; return { __drcp_ru(x.v), - __dmul_ru(pow(x.v, -2.0), x.d) }; }
-    template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { return sqrt(x); }
-    template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { return sqrt(x); }
+    template<> inline __device__ tangent<double> sqrt_down (tangent<double> x) { auto sqrt_x_v = sqrt_down(x.v); return { sqrt_x_v, div_down(x.d, add_up  (2.0 * sqrt_x_v, x.v == 0.0 ? std::numeric_limits<double>::min() : 0.0)) }; }
+    template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { auto sqrt_x_v = sqrt_up  (x.v); return { sqrt_x_v, div_up  (x.d, add_down(2.0 * sqrt_x_v, x.v == 0.0 ? std::numeric_limits<double>::min() : 0.0)) }; }
     template<> inline __device__ tangent<double> int_down  (tangent<double> x) { return floor(x); }
     template<> inline __device__ tangent<double> int_up    (tangent<double> x) { return ceil(x); }
     // template<> inline __device__ double trunc     (double x)           { return ::trunc(x); }
