@@ -82,6 +82,23 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), nextafter(x.d, pos_inf<tangent<double>>().d) }; }
     template<> inline __device__ tangent<double> prev_floating(tangent<double> x) { return { nextafter(x.v, neg_inf<tangent<double>>().v), nextafter(x.d, neg_inf<tangent<double>>().d) }; }
 
+#define fn(T) template<typename T> inline constexpr __device__ auto
+
+    fn(T) add_down(const T &x, typename T::value_type y) -> T { return { add_down(x.v, y), x.d }; }
+    fn(T) add_down(typename T::value_type x, const T &y) -> T { return { add_down(x, y.v), y.d }; }
+    fn(T) add_up  (const T &x, typename T::value_type y) -> T { return { add_up  (x.v, y), x.d }; }
+    fn(T) add_up  (typename T::value_type x, const T &y) -> T { return { add_up  (x, y.v), y.d }; }
+    fn(T) sub_down(const T &x, typename T::value_type y) -> T { return { sub_down(x.v, y), x.d }; }
+    fn(T) sub_down(typename T::value_type x, const T &y) -> T { return { sub_down(x, y.v), y.d }; }
+    fn(T) sub_up  (const T &x, typename T::value_type y) -> T { return { sub_up  (x.v, y), x.d }; }
+    fn(T) sub_up  (typename T::value_type x, const T &y) -> T { return { sub_up  (x, y.v), y.d }; }
+    fn(T) mul_down(const T &x, typename T::value_type y) -> T { return { mul_down(x.v, y), mul_down(x.d, y) }; }
+    fn(T) mul_down(typename T::value_type x, const T &y) -> T { return { mul_down(x, y.v), mul_down(x, y.d) }; }
+    fn(T) mul_up  (const T &x, typename T::value_type y) -> T { return { mul_up  (x.v, y), mul_up  (x.d, y) }; }
+    fn(T) mul_up  (typename T::value_type x, const T &y) -> T { return { mul_up  (x, y.v), mul_up  (x, y.d) }; }
+
+#undef fn
+
 // clang-format on
 } // namespace cu::intrinsic
 
