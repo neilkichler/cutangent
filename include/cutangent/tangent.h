@@ -9,6 +9,8 @@ namespace cu
 template<typename T>
 struct tangent
 {
+    using value_type = T;
+
     T v; // value
     T d; // derivative
 
