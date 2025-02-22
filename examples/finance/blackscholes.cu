@@ -125,7 +125,7 @@ int main()
         // double v = i + 1;
 
         value(xs[i].r)  = 0.01;
-        value(xs[i].S0) = { .cv = 99.5, .cc = 100.5, .box = { .lb = 99.5, .ub = 100.5 } };
+        value(xs[i].S0) = { { .lb = 99.5, .cv = 99.5, .cc = 100.5, .ub = 100.5 } };
         // value(xs[i].tau)   = 0.01 * v;
         value(xs[i].tau)   = 3.0 / 12.0;
         value(xs[i].K)     = 95.0;
