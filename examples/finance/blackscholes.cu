@@ -113,12 +113,14 @@ __global__ void bs_kernel(auto *ps, auto *res, std::integral auto n)
     }
 }
 
-template<typename T>
-struct bounds
+__global__ void bs_packed_kernel(auto *ps, auto *res, std::integral auto n)
 {
-    T lb;
-    T ub;
-};
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < n) {
+        blackscholes::parameters<decltype(ps[0])> p { ps[0], ps[1], ps[2], ps[3], ps[4] };
+        res[i] = blackscholes::call(p);
+    }
+}
 
 // template<typename T>
 // void expand(auto &&f, T &x, bounds input_bounds, bounds output_bounds)
@@ -133,70 +135,6 @@ struct bounds
 // void expand(bounds b, auto &&f, T &x, ...)
 // {
 // }
-
-// output bounds specify how large the width of the output interval maximally is allowed to be
-// input bounds specify the acceptable range of the input variables
-template<typename T>
-std::vector<bounds<T>> expand(auto &&f, std::vector<T> &xs,
-                           const std::vector<bounds<T>> &input_bounds,
-                           const std::vector<bounds<T>> &output_bounds,
-                           int maxiter)
-{
-    using ExpandT = cu::tangent<cu::mccormick<T>>;
-
-    T expansion_rate = 0.1;
-
-    auto n = xs.size();
-    std::vector<ExpandT> xs_expanded(n);
-    std::vector<bounds<cu::tangent<T>>> expanded_domain(n);
-
-    for (auto i = 0u; i < n; i++) {
-        value(xs_expanded[i]) = xs[i];
-    }
-
-    for (auto i = 0u; i < n; i++) {
-        ExpandT expanded;
-        for (auto j = 0u; j < maxiter; j++) {
-            value(xs_expanded[i]).lb -= j * expansion_rate;
-            value(xs_expanded[i]).ub += j * expansion_rate;
-            derivative(xs_expanded[i]) = 1.0;
-
-            expanded = f(xs_expanded[i]);
-
-            if (value(expanded).cv < output_bounds[i].lb || value(expanded).cc > output_bounds[i].ub) {
-                break;
-            }
-
-            derivative(xs_expanded[i]) = 0.0;
-        }
-
-        // expanded_domain[i] = { value(xs_expanded[i]).lb, value(xs_expanded[i]).ub };
-        value(expanded_domain[i])      = { value(expanded[i]).cv, value(xs_expanded[i]).ub };
-        derivative(expanded_domain[i]) = { derivative(expanded[i]).cv, derivative(xs_expanded[i]).ub };
-    }
-
-    return {};
-
-    // for (auto i = 0u; i < x.size(); i++) {
-    //     // double v = i + 1;
-    //
-    //     value(xs[i].r) = 0.01;
-    //     // value(xs[i].S0) = 100.0;
-    //     value(xs[i].S0) = { { .lb = expand_m, .cv = 100.0, .cc = 100.0, .ub = expand_p } };
-    //     // value(xs[i].S0) = { { .lb = 99.0, .cv = 100.0, .cc = 100.0, .ub = 101.0 } };
-    //     // value(xs[i].tau)   = 0.01 * v;
-    //     value(xs[i].tau)   = 3.0 / 12.0;
-    //     value(xs[i].K)     = 95.0;
-    //     value(xs[i].sigma) = 0.5;
-    //     // value(xs[i].sigma) = { { .lb = 0.4, .cv = 0.5, .cc = 0.5, .ub = 0.6 } };
-    //
-    //     // update seeds to compute derivative w.r.t S0
-    //     derivative(xs[i].S0)    = 1.0;
-    //     derivative(xs[i].sigma) = 0.0;
-    //
-    //     // expand(f, x[i], input_bounds[i], output_bounds[i]);
-    // }
-}
 
 // template<typename T>
 // struct poisoned
@@ -215,6 +153,114 @@ std::vector<bounds<T>> expand(auto &&f, std::vector<T> &xs,
 //     return 0;
 // }
 
+template<typename T>
+struct bounds
+{
+    T lb;
+    T ub;
+};
+
+template<typename T>
+struct expansion_info
+{
+    std::vector<bounds<T>> in;
+    // std::vector<bounds<cu::tangent<T>>> out;
+    std::vector<cu::tangent<bounds<T>>> out;
+};
+
+template<typename T>
+void cuda_fn(const T *xs, T *res, int n)
+{
+    T *d_xs, *d_res;
+    // TODO: alloc should be done outside of fn kernel
+    CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
+    CUDA_CHECK(cudaMalloc(&d_res, n * sizeof(*res)));
+
+    // CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
+    // bs_packed_kernel<<<n, 1>>>(d_xs, d_res, n);
+    // CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
+
+    CUDA_CHECK(cudaFree(d_xs));
+    CUDA_CHECK(cudaFree(d_res));
+}
+
+// output bounds specify how large the width of the output interval maximally is allowed to be
+// input bounds specify the acceptable range of the input variables
+template<typename T>
+expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
+                         const std::vector<bounds<T>> &input_bounds,
+                         const std::vector<bounds<T>> &output_bounds,
+                         int maxiter)
+{
+    using ExpandT = cu::tangent<cu::mccormick<T>>;
+
+    T expansion_rate = 0.1;
+
+    auto n = xs.size();
+    auto m = output_bounds.size();
+    std::vector<ExpandT> xs_expanded(n);
+    std::vector<bounds<T>> expanded_domain(n);
+    // std::vector<bounds<cu::tangent<T>>> expanded_range(n);
+    std::vector<cu::tangent<bounds<T>>> expanded_range(n);
+
+    for (auto i = 0u; i < n; i++) {
+        value(xs_expanded[i]) = xs[i];
+    }
+
+    for (auto i = 0u; i < n; i++) {
+        std::vector<ExpandT> expanded(m);
+        for (int j = 0; j < maxiter; j++) {
+            value(xs_expanded[i]).box.lb -= j * expansion_rate;
+            value(xs_expanded[i]).box.ub += j * expansion_rate;
+
+            if (value(xs_expanded[i]).box.lb < input_bounds[i].lb || value(xs_expanded[i]).box.ub > input_bounds[i].ub) {
+                break;
+            }
+
+            derivative(xs_expanded[i]) = 1.0;
+
+            // expanded = f(xs_expanded[i]);
+            // f(xs_expanded.data(), expanded.data(), 1);
+            cuda_fn(xs_expanded.data(), expanded.data(), 1);
+
+            for (auto k = 0u; k < m; k++) {
+                if (value(expanded[k]).cv < output_bounds[k].lb || value(expanded[k]).cc > output_bounds[k].ub) {
+                    break;
+                }
+            }
+
+            derivative(xs_expanded[i]) = 0.0;
+        }
+
+        expanded_domain[i] = { value(xs_expanded[i]).cv, value(xs_expanded[i]).cc };
+
+        value(expanded_range[i])      = { value(expanded[i]).cv, value(xs_expanded[i]).cc };
+        derivative(expanded_range[i]) = { derivative(expanded[i]).cv, derivative(xs_expanded[i]).cc };
+    }
+
+    return { expanded_domain, expanded_range };
+}
+
+int main()
+{
+    blackscholes::parameters<double> p { .r = 0.01, .S0 = 100.0, .tau = 3.0 / 12.0, .K = 95.0, .sigma = 0.5 };
+    std::vector<double> ps({ p.r, p.S0, p.tau, p.K, p.sigma });
+
+    std::vector<bounds<double>> in_bounds(ps.size());
+    in_bounds[0] = { p.r, p.r };
+    in_bounds[1] = { .lb = 50.0, .ub = 150.0 };
+    in_bounds[2] = { p.tau, p.tau };
+    in_bounds[3] = { p.K, p.K };
+    in_bounds[4] = { p.sigma, p.sigma };
+
+    std::vector<bounds<double>> out_bounds(1);
+    out_bounds[0] = { .lb = 0.0, .ub = 100.0 };
+
+    auto res = expand(ps, in_bounds, out_bounds, 10);
+    // auto res = expand(cuda_fn<double>, ps, in_bounds, out_bounds, 10);
+}
+
+#if 0
 int main()
 {
     constexpr int n = 1;
@@ -300,3 +346,4 @@ int main()
     }
     return 0;
 }
+#endif
