@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 namespace blackscholes
 {
@@ -154,31 +155,30 @@ __global__ void bs_packed_kernel(auto *ps, auto *res, std::integral auto n)
 // }
 
 template<typename T>
-struct bounds
-{
-    T lb;
-    T ub;
-};
+using bounds = cu::interval<T>;
 
 template<typename T>
 struct expansion_info
 {
-    std::vector<bounds<T>> in;
-    // std::vector<bounds<cu::tangent<T>>> out;
+    std::vector<bounds<T>> in
     std::vector<cu::tangent<bounds<T>>> out;
 };
 
+// xs has size n
+// n inputs
+// res has size m
+// m outputs
 template<typename T>
-void cuda_fn(const T *xs, T *res, int n)
+void cuda_fn(const T *xs, std::size_t n, T *res, std::size_t m)
 {
     T *d_xs, *d_res;
     // TODO: alloc should be done outside of fn kernel
     CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
-    CUDA_CHECK(cudaMalloc(&d_res, n * sizeof(*res)));
+    CUDA_CHECK(cudaMalloc(&d_res, m * sizeof(*res)));
 
-    // CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
-    // bs_packed_kernel<<<n, 1>>>(d_xs, d_res, n);
-    // CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
+    bs_packed_kernel<<<m, 1>>>(d_xs, d_res, n);
+    CUDA_CHECK(cudaMemcpy(res, d_res, m * sizeof(*res), cudaMemcpyDeviceToHost));
 
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_res));
@@ -196,46 +196,107 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
 
     T expansion_rate = 0.1;
 
+    bool reached_output_bounds = false;
     auto n = xs.size();
     auto m = output_bounds.size();
     std::vector<ExpandT> xs_expanded(n);
     std::vector<bounds<T>> expanded_domain(n);
-    // std::vector<bounds<cu::tangent<T>>> expanded_range(n);
-    std::vector<cu::tangent<bounds<T>>> expanded_range(n);
+    std::vector<cu::tangent<bounds<T>>> expanded_range(n); // NOTE: assumes only one output for now
+
+    std::ofstream ofs("report");
 
     for (auto i = 0u; i < n; i++) {
         value(xs_expanded[i]) = xs[i];
     }
 
+    // TODO: add regular output
+    std::vector<T> regular_output(m);
+    cuda_fn(xs.data(), xs.size(), regular_output.data(), regular_output.size());
+
+    for (auto i = 0u; i < m; i++) {
+        std::cout << "regular output: " << regular_output[i] << std::endl;
+    }
+    // std::vector<cu::tangent<T>> regular_output(m);
+    // std::vector<cu::tangent<T>> xs_t(n);
+    // for (auto i = 0u; i < n; i++) {
+    //     xs_t[i] = xs[i];
+    // }
+    // cuda_fn(xs_t.data(), xs_t.size(), regular_output.data(), regular_output.size());
+    //
+    // for (auto i = 0u; i < m; i++) {
+    //     std::cout << "regular output: " << regular_output[i].v << std::endl;
+    //     std::cout << "regular output: " << regular_output[i].d << std::endl;
+    // }
+
+
     for (auto i = 0u; i < n; i++) {
+        ExpandT original_value = xs_expanded[i];
         std::vector<ExpandT> expanded(m);
+
+        if (inf(input_bounds[i]) == sup(input_bounds[i])) {
+            expanded_domain[i] = input_bounds[i];
+            value(expanded_range[i]) = { regular_output[0], regular_output[0] };
+            continue;
+        }
+
         for (int j = 0; j < maxiter; j++) {
+            if (reached_output_bounds) {
+                reached_output_bounds = false;
+                break;
+            }
             value(xs_expanded[i]).box.lb -= j * expansion_rate;
             value(xs_expanded[i]).box.ub += j * expansion_rate;
 
-            if (value(xs_expanded[i]).box.lb < input_bounds[i].lb || value(xs_expanded[i]).box.ub > input_bounds[i].ub) {
+            if (inf(value(xs_expanded[i])) < inf(input_bounds[i]) || sup(value(xs_expanded[i])) > sup(input_bounds[i])) {
+                std::cout << "reached input bounds for variable: " << i << std::endl;
                 break;
+            } else {
+                std::cout << "performing eval" << std::endl;
             }
 
             derivative(xs_expanded[i]) = 1.0;
 
-            // expanded = f(xs_expanded[i]);
-            // f(xs_expanded.data(), expanded.data(), 1);
-            cuda_fn(xs_expanded.data(), expanded.data(), 1);
+            std::cout << "i: " << i << ", j: " << j
+                      << ", lb: " << value(xs_expanded[i]).box.lb
+                      << ", cv: " << value(xs_expanded[i]).cv
+                      << ", cc: " << value(xs_expanded[i]).cc
+                      << ", ub: " << value(xs_expanded[i]).box.ub << std::endl;
+
+            cuda_fn(xs_expanded.data(), xs_expanded.size(), expanded.data(), expanded.size());
+            // f(xs_expanded.data(), xs_expanded.size(), expanded.data(), expanded.size());
+
+            derivative(xs_expanded[i]) = 0.0;
+
+            std::cout << "expanded results: " << std::endl;
+            for (auto k = 0u; k < m; k++) {
+                std::cout << "values: " << value(expanded[k]).cv << ", " << value(expanded[k]).cc << std::endl;
+                std::cout << "deriv: " << derivative(expanded[k]).cv << ", " << derivative(expanded[k]).cc << std::endl;
+            }
 
             for (auto k = 0u; k < m; k++) {
-                if (value(expanded[k]).cv < output_bounds[k].lb || value(expanded[k]).cc > output_bounds[k].ub) {
+                if (value(expanded[k]).cv < output_bounds[k].lb
+                 || value(expanded[k]).cc > output_bounds[k].ub) {
+                    std::cout << "reached output bounds" << std::endl;
+                    reached_output_bounds = true;
                     break;
                 }
             }
-
-            derivative(xs_expanded[i]) = 0.0;
         }
+        std::cout << "finished variable " << i << " expansion" << std::endl;
 
-        expanded_domain[i] = { value(xs_expanded[i]).cv, value(xs_expanded[i]).cc };
+        expanded_domain[i] = { inf(value(xs_expanded[i])), sup(value(xs_expanded[i])) };
 
-        value(expanded_range[i])      = { value(expanded[i]).cv, value(xs_expanded[i]).cc };
-        derivative(expanded_range[i]) = { derivative(expanded[i]).cv, derivative(xs_expanded[i]).cc };
+        std::cout << "expanded domain is: " << expanded_domain[i].lb << ' ' << expanded_domain[i].ub << std::endl;
+        // std::cout << "expanded range is: " << value(expanded[0]).cv << ' ' << value(expanded[0]).cc << std::endl;
+        // std::cout << "expanded range is: " << derivative(expanded[0]).cv << ' ' << derivative(expanded[0]).cc << std::endl;
+
+        value(expanded_range[i])      = { value(expanded[0]).cv, value(expanded[0]).cc };
+        derivative(expanded_range[i]) = { derivative(expanded[0]).cv, derivative(expanded[0]).cc };
+
+        std::cout << "expanded range is: " << value(expanded_range[i]).lb << ' ' << value(expanded_range[i]).ub << std::endl;
+        std::cout << "expanded range is: " << derivative(expanded_range[i]).lb << ' ' << derivative(expanded_range[i]).ub << std::endl;
+
+        xs_expanded[i] = original_value;
     }
 
     return { expanded_domain, expanded_range };
@@ -247,17 +308,30 @@ int main()
     std::vector<double> ps({ p.r, p.S0, p.tau, p.K, p.sigma });
 
     std::vector<bounds<double>> in_bounds(ps.size());
-    in_bounds[0] = { p.r, p.r };
-    in_bounds[1] = { .lb = 50.0, .ub = 150.0 };
-    in_bounds[2] = { p.tau, p.tau };
-    in_bounds[3] = { p.K, p.K };
-    in_bounds[4] = { p.sigma, p.sigma };
+    in_bounds[0] = {{ p.r, p.r }};
+    in_bounds[1] = {{ .lb = 50.0, .ub = 150.0 }};
+    in_bounds[2] = {{ p.tau, p.tau }};
+    in_bounds[3] = {{ p.K, p.K }};
+    in_bounds[4] = {{ p.sigma, p.sigma }};
 
+    // TODO: have output sensitivity bounds (bounding the derivative)
     std::vector<bounds<double>> out_bounds(1);
-    out_bounds[0] = { .lb = 0.0, .ub = 100.0 };
+    out_bounds[0] = {{ .lb = 12.3, .ub = 12.7 }};
 
     auto res = expand(ps, in_bounds, out_bounds, 10);
-    // auto res = expand(cuda_fn<double>, ps, in_bounds, out_bounds, 10);
+    // auto res = expand(cuda_fn, ps, in_bounds, out_bounds, 10);
+
+    std::cout << "------- Results ---------" << std::endl;
+    std::cout << "------- Input bounds ---------" << std::endl;
+    for (auto i = 0u; i < res.in.size(); i++) {
+        std::cout << res.in[i].lb << " " << res.in[i].ub << std::endl;
+    }
+
+    std::cout << "------- Output bounds ---------" << std::endl;
+    for (auto el : res.out) {
+        std::cout << value(el).lb << " " << value(el).ub << std::endl;
+        std::cout << derivative(el).lb << " " << derivative(el).ub << std::endl;
+    }
 }
 
 #if 0
