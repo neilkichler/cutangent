@@ -205,7 +205,34 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     std::vector<cu::tangent<bounds<T>>> expanded_range(n); // NOTE: assumes only one output for now
     std::vector<ExpandT> expanded_prev(m);
 
-    std::ofstream ofs("report");
+    std::ofstream o_inputs("inputs");
+    std::ofstream o_report("report");
+    std::ofstream o_output("output");
+    std::ofstream o_dout("doutput");
+
+    // report input bounds
+    o_inputs << "# variable lb ub\n";
+    for (auto i = 0u; i < n; i++) {
+        o_inputs << "in" << i << ' ' << inf(input_bounds[i]) << ' ' << sup(input_bounds[i]) << '\n';
+    }
+
+    // report output bounds
+
+    // o_output << "# variable lb ub\n";
+    // for (auto i = 0u; i < m; i++) {
+    //     o_output << "out" << i << ' ' << inf(value(output_bounds[i])) << ' ' << sup(value(output_bounds[i])) << '\n';
+    // }
+
+    o_report << "# ";
+    for (auto k = 0u; k < n; k++) {
+        o_report << 'v' << k << "_lb " << 'v' << k << "_ub ";
+    }
+
+
+    o_dout << "# variable lb ub\n";
+    for (auto i = 0u; i < m; i++) {
+        o_dout << "dout" << i << "din" << i << ' ' << inf(derivative(output_bounds[i])) << ' ' << sup(derivative(output_bounds[i])) << '\n';
+    }
 
     for (auto i = 0u; i < n; i++) {
         value(xs_expanded[i]) = xs[i];
@@ -215,11 +242,11 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     cuda_fn(xs.data(), xs.size(), regular_output.data(), regular_output.size());
 
     // report init
-    ofs << "# ";
+    o_report << "# ";
     for (auto k = 0u; k < n; k++) {
-        ofs << 'v' << k << ' ';
+        o_report << 'v' << k << ' ';
     }
-    ofs << "var_altered width in_lb in_ub out_lb out_ub dout_lb dout_ub inside?\n";
+    o_report << "var_altered width in_lb in_ub out_lb out_ub dout_lb dout_ub inside?\n";
 
     for (auto i = 0u; i < n; i++) {
         ExpandT original_value = xs_expanded[i];
@@ -259,16 +286,16 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
 
             // report iteration
             for (auto k = 0u; k < n; k++) {
-                ofs << xs[k] << ' ';
+                o_report << xs[k] << ' ';
             }
-            ofs << i << ' ';
-            ofs << value(xs_expanded[i]).box.ub - value(xs_expanded[i]).box.lb << ' ';
-            ofs << value(xs_expanded[i]).box.lb << ' ';
-            ofs << value(xs_expanded[i]).box.ub << ' ';
-            ofs << value(expanded[0]).cv << ' ';
-            ofs << value(expanded[0]).cc << ' ';
-            ofs << derivative(expanded[0]).cv << ' ';
-            ofs << derivative(expanded[0]).cc << ' ';
+            o_report << i << ' ';
+            o_report << value(xs_expanded[i]).box.ub - value(xs_expanded[i]).box.lb << ' ';
+            o_report << value(xs_expanded[i]).box.lb << ' ';
+            o_report << value(xs_expanded[i]).box.ub << ' ';
+            o_report << value(expanded[0]).cv << ' ';
+            o_report << value(expanded[0]).cc << ' ';
+            o_report << derivative(expanded[0]).cv << ' ';
+            o_report << derivative(expanded[0]).cc << ' ';
 
             derivative(xs_expanded[i]) = 0.0;
 
@@ -285,14 +312,14 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
                  || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
                 ) {
                     std::cout << "reached output bounds" << std::endl;
-                    ofs << "no" << std::endl;
+                    o_report << "no" << std::endl;
                     reached_output_bounds = true;
                     break;
                 }
             }
 
             if (!reached_output_bounds) {
-                ofs << "yes" << std::endl;
+                o_report << "yes" << std::endl;
                 expanded_prev = expanded;
                 xs_expanded_prev = xs_expanded;
             }
