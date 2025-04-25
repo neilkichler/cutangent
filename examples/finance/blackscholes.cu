@@ -214,6 +214,13 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     std::vector<T> regular_output(m);
     cuda_fn(xs.data(), xs.size(), regular_output.data(), regular_output.size());
 
+    // report init
+    ofs << "# ";
+    for (auto k = 0u; k < n; k++) {
+        ofs << 'v' << k << ' ';
+    }
+    ofs << "var_altered width in_lb in_ub out_lb out_ub dout_lb dout_ub inside?\n";
+
     for (auto i = 0u; i < n; i++) {
         ExpandT original_value = xs_expanded[i];
         std::vector<ExpandT> expanded(m);
@@ -250,6 +257,19 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
             cuda_fn(xs_expanded.data(), xs_expanded.size(), expanded.data(), expanded.size());
             // f(xs_expanded.data(), xs_expanded.size(), expanded.data(), expanded.size());
 
+            // report iteration
+            for (auto k = 0u; k < n; k++) {
+                ofs << xs[k] << ' ';
+            }
+            ofs << i << ' ';
+            ofs << value(xs_expanded[i]).box.ub - value(xs_expanded[i]).box.lb << ' ';
+            ofs << value(xs_expanded[i]).box.lb << ' ';
+            ofs << value(xs_expanded[i]).box.ub << ' ';
+            ofs << value(expanded[0]).cv << ' ';
+            ofs << value(expanded[0]).cc << ' ';
+            ofs << derivative(expanded[0]).cv << ' ';
+            ofs << derivative(expanded[0]).cc << ' ';
+
             derivative(xs_expanded[i]) = 0.0;
 
             std::cout << "expanded results: " << std::endl;
@@ -265,12 +285,14 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
                  || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
                 ) {
                     std::cout << "reached output bounds" << std::endl;
+                    ofs << "no" << std::endl;
                     reached_output_bounds = true;
                     break;
                 }
             }
 
             if (!reached_output_bounds) {
+                ofs << "yes" << std::endl;
                 expanded_prev = expanded;
                 xs_expanded_prev = xs_expanded;
             }
