@@ -160,7 +160,7 @@ using bounds = cu::interval<T>;
 template<typename T>
 struct expansion_info
 {
-    std::vector<bounds<T>> in
+    std::vector<bounds<T>> in;
     std::vector<cu::tangent<bounds<T>>> out;
 };
 
@@ -177,7 +177,7 @@ void cuda_fn(const T *xs, std::size_t n, T *res, std::size_t m)
     CUDA_CHECK(cudaMalloc(&d_res, m * sizeof(*res)));
 
     CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
-    bs_packed_kernel<<<m, 1>>>(d_xs, d_res, n);
+    bs_packed_kernel<<<(unsigned int)m, 1>>>(d_xs, d_res, n);
     CUDA_CHECK(cudaMemcpy(res, d_res, m * sizeof(*res), cudaMemcpyDeviceToHost));
 
     CUDA_CHECK(cudaFree(d_xs));
@@ -189,7 +189,7 @@ void cuda_fn(const T *xs, std::size_t n, T *res, std::size_t m)
 template<typename T>
 expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
                          const std::vector<bounds<T>> &input_bounds,
-                         const std::vector<bounds<T>> &output_bounds,
+                         const std::vector<cu::tangent<bounds<T>>> &output_bounds,
                          int maxiter)
 {
     using ExpandT = cu::tangent<cu::mccormick<T>>;
@@ -200,8 +200,10 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     auto n = xs.size();
     auto m = output_bounds.size();
     std::vector<ExpandT> xs_expanded(n);
+    std::vector<ExpandT> xs_expanded_prev(n);
     std::vector<bounds<T>> expanded_domain(n);
     std::vector<cu::tangent<bounds<T>>> expanded_range(n); // NOTE: assumes only one output for now
+    std::vector<ExpandT> expanded_prev(m);
 
     std::ofstream ofs("report");
 
@@ -209,25 +211,8 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
         value(xs_expanded[i]) = xs[i];
     }
 
-    // TODO: add regular output
     std::vector<T> regular_output(m);
     cuda_fn(xs.data(), xs.size(), regular_output.data(), regular_output.size());
-
-    for (auto i = 0u; i < m; i++) {
-        std::cout << "regular output: " << regular_output[i] << std::endl;
-    }
-    // std::vector<cu::tangent<T>> regular_output(m);
-    // std::vector<cu::tangent<T>> xs_t(n);
-    // for (auto i = 0u; i < n; i++) {
-    //     xs_t[i] = xs[i];
-    // }
-    // cuda_fn(xs_t.data(), xs_t.size(), regular_output.data(), regular_output.size());
-    //
-    // for (auto i = 0u; i < m; i++) {
-    //     std::cout << "regular output: " << regular_output[i].v << std::endl;
-    //     std::cout << "regular output: " << regular_output[i].d << std::endl;
-    // }
-
 
     for (auto i = 0u; i < n; i++) {
         ExpandT original_value = xs_expanded[i];
@@ -274,21 +259,29 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
             }
 
             for (auto k = 0u; k < m; k++) {
-                if (value(expanded[k]).cv < output_bounds[k].lb
-                 || value(expanded[k]).cc > output_bounds[k].ub) {
+                if (value(expanded[k]).cv < value(output_bounds[k]).lb
+                 || value(expanded[k]).cc > value(output_bounds[k]).ub
+                 || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
+                 || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
+                ) {
                     std::cout << "reached output bounds" << std::endl;
                     reached_output_bounds = true;
                     break;
                 }
             }
+
+            if (!reached_output_bounds) {
+                expanded_prev = expanded;
+                xs_expanded_prev = xs_expanded;
+            }
         }
         std::cout << "finished variable " << i << " expansion" << std::endl;
 
-        expanded_domain[i] = { inf(value(xs_expanded[i])), sup(value(xs_expanded[i])) };
+        expanded = expanded_prev;
+        xs_expanded = xs_expanded_prev;
 
+        expanded_domain[i] = { inf(value(xs_expanded[i])), sup(value(xs_expanded[i])) };
         std::cout << "expanded domain is: " << expanded_domain[i].lb << ' ' << expanded_domain[i].ub << std::endl;
-        // std::cout << "expanded range is: " << value(expanded[0]).cv << ' ' << value(expanded[0]).cc << std::endl;
-        // std::cout << "expanded range is: " << derivative(expanded[0]).cv << ' ' << derivative(expanded[0]).cc << std::endl;
 
         value(expanded_range[i])      = { value(expanded[0]).cv, value(expanded[0]).cc };
         derivative(expanded_range[i]) = { derivative(expanded[0]).cv, derivative(expanded[0]).cc };
@@ -308,15 +301,15 @@ int main()
     std::vector<double> ps({ p.r, p.S0, p.tau, p.K, p.sigma });
 
     std::vector<bounds<double>> in_bounds(ps.size());
-    in_bounds[0] = {{ p.r, p.r }};
+    in_bounds[0] = p.r;
     in_bounds[1] = {{ .lb = 50.0, .ub = 150.0 }};
-    in_bounds[2] = {{ p.tau, p.tau }};
-    in_bounds[3] = {{ p.K, p.K }};
-    in_bounds[4] = {{ p.sigma, p.sigma }};
+    in_bounds[2] = p.tau;
+    in_bounds[3] = p.K;
+    in_bounds[4] = p.sigma;
 
-    // TODO: have output sensitivity bounds (bounding the derivative)
-    std::vector<bounds<double>> out_bounds(1);
-    out_bounds[0] = {{ .lb = 12.3, .ub = 12.7 }};
+    std::vector<cu::tangent<bounds<double>>> out_bounds(1);
+    value(out_bounds[0]) = {{ .lb = 12.3, .ub = 12.7 }};
+    derivative(out_bounds[0]) = {{ .lb = .63, .ub = .7 }};
 
     auto res = expand(ps, in_bounds, out_bounds, 10);
     // auto res = expand(cuda_fn, ps, in_bounds, out_bounds, 10);
