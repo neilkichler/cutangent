@@ -45,9 +45,21 @@ struct tangent
 };
 
 template<typename T>
+constexpr const T &value(const tangent<T> &x)
+{
+    return x.v;
+}
+
+template<typename T>
 constexpr T &value(tangent<T> &x)
 {
     return x.v;
+}
+
+template<typename T>
+constexpr const T &derivative(const tangent<T> &x)
+{
+    return x.d;
 }
 
 template<typename T>
