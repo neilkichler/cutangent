@@ -8,9 +8,9 @@
 #include <cutangent/cutangent.cuh>
 #include <cutangent/format.h>
 
+#include <fstream>
 #include <iostream>
 #include <vector>
-#include <fstream>
 
 namespace blackscholes
 {
@@ -197,8 +197,8 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     T expansion_rate = 0.1;
 
     bool reached_output_bounds = false;
-    auto n = xs.size();
-    auto m = output_bounds.size();
+    auto n                     = xs.size();
+    auto m                     = output_bounds.size();
     std::vector<ExpandT> xs_expanded(n);
     std::vector<ExpandT> xs_expanded_prev(n);
     std::vector<bounds<T>> expanded_domain(n);
@@ -211,29 +211,41 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
     std::ofstream o_dout("doutput");
 
     // report input bounds
-    o_inputs << "# variable lb ub\n";
+    o_inputs << "# ";
     for (auto i = 0u; i < n; i++) {
-        o_inputs << "in" << i << ' ' << inf(input_bounds[i]) << ' ' << sup(input_bounds[i]) << '\n';
+        o_inputs << "in" << i << "_lb in" << i << "_ub ";
+    }
+    o_inputs << '\n';
+
+    for (auto i = 0u; i < n; i++) {
+        o_inputs << inf(input_bounds[i]) << ' ' << sup(input_bounds[i]) << ' ';
     }
 
     // report output bounds
-
-    // o_output << "# variable lb ub\n";
-    // for (auto i = 0u; i < m; i++) {
-    //     o_output << "out" << i << ' ' << inf(value(output_bounds[i])) << ' ' << sup(value(output_bounds[i])) << '\n';
-    // }
-
-    o_report << "# ";
-    for (auto k = 0u; k < n; k++) {
-        o_report << 'v' << k << "_lb " << 'v' << k << "_ub ";
-    }
-
-
-    o_dout << "# variable lb ub\n";
+    o_output << "# ";
     for (auto i = 0u; i < m; i++) {
-        o_dout << "dout" << i << "din" << i << ' ' << inf(derivative(output_bounds[i])) << ' ' << sup(derivative(output_bounds[i])) << '\n';
+        o_output << "out" << i << "_lb out" << i << "_ub ";
+    }
+    o_output << '\n';
+
+    for (auto i = 0u; i < m; i++) {
+        o_output << inf(value(output_bounds[i])) << ' ' << sup(value(output_bounds[i])) << ' ';
     }
 
+    // report derivative output bounds (for one variable for now)
+    o_dout << "# ";
+    for (auto i = 0u; i < m; i++) {
+        for (auto j = 0u; j < n; j++) {
+            o_dout << "df" << i << "dx" << j << "_lb df" << i << "dx" << j << "_ub ";
+        }
+    }
+    o_dout << '\n';
+
+    for (auto i = 0u; i < m; i++) {
+        o_dout << inf(derivative(output_bounds[i])) << ' ' << sup(derivative(output_bounds[i])) << ' ';
+    }
+
+    // regular function evaluation
     for (auto i = 0u; i < n; i++) {
         value(xs_expanded[i]) = xs[i];
     }
@@ -253,7 +265,7 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
         std::vector<ExpandT> expanded(m);
 
         if (inf(input_bounds[i]) == sup(input_bounds[i])) {
-            expanded_domain[i] = input_bounds[i];
+            expanded_domain[i]       = input_bounds[i];
             value(expanded_range[i]) = { regular_output[0], regular_output[0] };
             continue;
         }
@@ -307,10 +319,9 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
 
             for (auto k = 0u; k < m; k++) {
                 if (value(expanded[k]).cv < value(output_bounds[k]).lb
-                 || value(expanded[k]).cc > value(output_bounds[k]).ub
-                 || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
-                 || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
-                ) {
+                    || value(expanded[k]).cc > value(output_bounds[k]).ub
+                    || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb
+                    || derivative(expanded[k]).cv < derivative(output_bounds[k]).lb) {
                     std::cout << "reached output bounds" << std::endl;
                     o_report << "no" << std::endl;
                     reached_output_bounds = true;
@@ -320,13 +331,13 @@ expansion_info<T> expand(/* auto &&f, */ std::vector<T> &xs,
 
             if (!reached_output_bounds) {
                 o_report << "yes" << std::endl;
-                expanded_prev = expanded;
+                expanded_prev    = expanded;
                 xs_expanded_prev = xs_expanded;
             }
         }
         std::cout << "finished variable " << i << " expansion" << std::endl;
 
-        expanded = expanded_prev;
+        expanded    = expanded_prev;
         xs_expanded = xs_expanded_prev;
 
         expanded_domain[i] = { inf(value(xs_expanded[i])), sup(value(xs_expanded[i])) };
@@ -351,14 +362,21 @@ int main()
 
     std::vector<bounds<double>> in_bounds(ps.size());
     in_bounds[0] = p.r;
-    in_bounds[1] = {{ .lb = 50.0, .ub = 150.0 }};
+    in_bounds[1] = { { .lb = 50.0, .ub = 150.0 } };
     in_bounds[2] = p.tau;
     in_bounds[3] = p.K;
     in_bounds[4] = p.sigma;
 
+
     std::vector<cu::tangent<bounds<double>>> out_bounds(1);
-    value(out_bounds[0]) = {{ .lb = 12.3, .ub = 12.7 }};
-    derivative(out_bounds[0]) = {{ .lb = .63, .ub = .7 }};
+    value(out_bounds[0])      = { { .lb = 12.3, .ub = 12.7 } };
+    derivative(out_bounds[0]) = { { .lb = .63, .ub = .7 } };
+
+    // std::vector<cu::tangent<bounds<double>>> out_bounds(2);
+    // value(out_bounds[0])      = { { .lb = -100.0, .ub = 100.0 } };
+    // derivative(out_bounds[0]) = { { .lb = -100.0, .ub = 100.0 } };
+    // value(out_bounds[1])      = { { .lb = 12.3, .ub = 12.7 } };
+    // derivative(out_bounds[1]) = { { .lb = .63, .ub = .7 } };
 
     auto res = expand(ps, in_bounds, out_bounds, 10);
     // auto res = expand(cuda_fn, ps, in_bounds, out_bounds, 10);
