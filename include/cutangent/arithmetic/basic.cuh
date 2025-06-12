@@ -191,9 +191,7 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
 template<typename T>
 fn tangent<T> abs(tangent<T> x)
 {
-    using std::abs;
-    using std::copysign;
-
+    using std::abs, std::copysign;
 
     constexpr T zero {};
     if (x.v == zero) {
@@ -219,8 +217,7 @@ fn tangent<T> mid(tangent<T> v, tangent<T> lb, tangent<T> ub)
 template<typename T>
 fn tangent<T> sin(tangent<T> x)
 {
-    using std::cos;
-    using std::sin;
+    using std::sin, std::cos;
 
     return { sin(x.v), cos(x.v) * x.d };
 }
@@ -228,8 +225,7 @@ fn tangent<T> sin(tangent<T> x)
 template<typename T>
 fn tangent<T> cos(tangent<T> x)
 {
-    using std::cos;
-    using std::sin;
+    using std::cos, std::sin;
 
     return { cos(x.v), -sin(x.v) * x.d };
 }
@@ -237,8 +233,7 @@ fn tangent<T> cos(tangent<T> x)
 template<typename T>
 fn tangent<T> tan(tangent<T> x)
 {
-    using std::pow;
-    using std::tan;
+    using std::pow, std::tan;
 
     return { tan(x.v), static_cast<T>(1.0) + pow(tan(x.v), 2) };
 }
@@ -246,9 +241,7 @@ fn tangent<T> tan(tangent<T> x)
 template<typename T>
 fn tangent<T> asin(tangent<T> x)
 {
-    using std::asin;
-    using std::pow;
-    using std::sqrt;
+    using std::asin, std::sqrt, std::pow;
 
     return { asin(x.v), x.d / sqrt(1.0 - pow(x.v, 2)) };
 }
@@ -256,9 +249,7 @@ fn tangent<T> asin(tangent<T> x)
 template<typename T>
 fn tangent<T> acos(tangent<T> x)
 {
-    using std::acos;
-    using std::pow;
-    using std::sqrt;
+    using std::acos, std::sqrt, std::pow;
 
     return { acos(x.v), -x.d / sqrt(1.0 - pow(x.v, 2)) };
 }
@@ -266,8 +257,7 @@ fn tangent<T> acos(tangent<T> x)
 template<typename T>
 fn tangent<T> atan(tangent<T> x)
 {
-    using std::atan;
-    using std::pow;
+    using std::atan, std::pow;
 
     return { atan(x.v), x.d / (1.0 + pow(x.v, 2)) };
 }
@@ -275,8 +265,7 @@ fn tangent<T> atan(tangent<T> x)
 template<typename T>
 fn tangent<T> atan2(tangent<T> a, tangent<T> b)
 {
-    using std::atan2;
-    using std::pow;
+    using std::atan2, std::pow;
 
     return { atan2(a.v, b.v), (a.d * b.v - b.d * a.v) / (pow(a.v, 2) + pow(b.v, 2)) };
 }
@@ -284,8 +273,7 @@ fn tangent<T> atan2(tangent<T> a, tangent<T> b)
 template<typename T>
 fn tangent<T> atan2(tangent<T> a, T b)
 {
-    using std::atan2;
-    using std::pow;
+    using std::atan2, std::pow;
 
     return { atan2(a.v, b), b * a.d / (pow(a.v, 2) + pow(b, 2)) };
 }
@@ -293,8 +281,7 @@ fn tangent<T> atan2(tangent<T> a, T b)
 template<typename T>
 fn tangent<T> atan2(T a, tangent<T> b)
 {
-    using std::atan2;
-    using std::pow;
+    using std::atan2, std::pow;
 
     return { atan2(a, b.v), -a * b.d / (pow(a, 2) + pow(b.v, 2)) };
 }
@@ -302,8 +289,7 @@ fn tangent<T> atan2(T a, tangent<T> b)
 template<typename T>
 fn tangent<T> sinh(tangent<T> x)
 {
-    using std::cosh;
-    using std::sinh;
+    using std::sinh, std::cosh;
 
     return { sinh(x.v), cosh(x.v) * x.d };
 }
@@ -311,8 +297,7 @@ fn tangent<T> sinh(tangent<T> x)
 template<typename T>
 fn tangent<T> cosh(tangent<T> x)
 {
-    using std::cosh;
-    using std::sinh;
+    using std::cosh, std::sinh;
 
     return { cosh(x.v), sinh(x.v) * x.d };
 }
@@ -320,9 +305,7 @@ fn tangent<T> cosh(tangent<T> x)
 template<typename T>
 fn tangent<T> tanh(tangent<T> x)
 {
-    using std::cosh;
-    using std::pow;
-    using std::tanh;
+    using std::tanh, std::pow, std::cosh;
 
     return { tanh(x.v), x.d / (pow(cosh(x.v), 2)) };
 }
@@ -330,9 +313,7 @@ fn tangent<T> tanh(tangent<T> x)
 template<typename T>
 fn tangent<T> asinh(tangent<T> x)
 {
-    using std::asinh;
-    using std::pow;
-    using std::sqrt;
+    using std::asinh, std::sqrt, std::pow;
 
     return { asinh(x.v), x.d / sqrt(pow(x.v, 2) + 1.0) };
 }
@@ -340,9 +321,7 @@ fn tangent<T> asinh(tangent<T> x)
 template<typename T>
 fn tangent<T> acosh(tangent<T> x)
 {
-    using std::acosh;
-    using std::pow;
-    using std::sqrt;
+    using std::acosh, std::sqrt, std::pow;
 
     return { acosh(x.v), x.d / sqrt(pow(x.v, 2) - 1.0) };
 }
@@ -350,8 +329,7 @@ fn tangent<T> acosh(tangent<T> x)
 template<typename T>
 fn tangent<T> atanh(tangent<T> x)
 {
-    using std::atanh;
-    using std::pow;
+    using std::atanh, std::pow;
 
     return { atanh(x.v), x.d / (1.0 - pow(x.v, 2)) };
 }
@@ -398,8 +376,7 @@ fn tangent<T> sqr(tangent<T> x)
 template<typename T>
 fn tangent<T> sqrt(tangent<T> x)
 {
-    using std::numeric_limits;
-    using std::sqrt;
+    using std::sqrt, std::numeric_limits;
 
     constexpr T zero {};
     // NOTE: We currently do not treat the case where x.v == 0, x.d > 0 to map to +inf.
@@ -437,8 +414,7 @@ fn tangent<T> pow(auto x, tangent<T> n)
 template<typename T>
 fn tangent<T> pow(tangent<T> x, tangent<T> n)
 {
-    using std::log;
-    using std::pow;
+    using std::pow, std::log;
 
     return { pow(x.v, n.v),
              n.v * pow(x.v, n.v - 1) * x.d + pow(x.v, n.v) * log(x.v) * n.d };
@@ -495,8 +471,7 @@ fn tangent<T> floor(tangent<T> x)
 template<typename T>
 fn bool isinf(tangent<T> x)
 {
-    using ::isinf;
-    using std::isinf;
+    using ::isinf, std::isinf;
 
     return isinf(x.v);
 }
@@ -544,10 +519,7 @@ fn tangent<T> copysign(tangent<T> mag, T sgn)
 template<typename T>
 fn tangent<T> erf(tangent<T> x)
 {
-    using std::erf;
-    using std::exp;
-    using std::pow;
-    using std::sqrt;
+    using std::erf, std::exp, std::pow, std::sqrt;
 
     return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
 }
@@ -555,10 +527,7 @@ fn tangent<T> erf(tangent<T> x)
 template<typename T>
 fn tangent<T> erfc(tangent<T> x)
 {
-    using std::erfc;
-    using std::exp;
-    using std::pow;
-    using std::sqrt;
+    using std::erfc, std::exp, std::pow, std::sqrt;
 
     return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
 }
