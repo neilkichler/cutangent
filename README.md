@@ -14,11 +14,15 @@ CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangen
 
 `sqr`
 `sqrt`
+`cbrt`
 `abs`
 `exp`
 `log`
+`log2`
+`log10`
 `pown`
 `pow`
+`recip`
 
 `sin`
 `cos`
@@ -39,6 +43,16 @@ CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangen
 `max`
 `min`
 `mid`
+`clamp`
+`ceil`
+`floor`
+`remquo`
+
+`isinf`
+`isfinite`
+`isnan`
+`signbit`
+`copysign`
 
 ## Installation
 > Please make sure that you have installed everything mentioned in the section [Build Requirements](#build-requirements).
