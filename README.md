@@ -76,6 +76,14 @@ In either case, you can link to the library using:
 target_link_libraries(${PROJECT_NAME} PUBLIC cutangent)
 ```
 
+
+> [!IMPORTANT]  
+> When using CUDA in a CMake project, make sure that it configures the `CUDA_ARCHITECTURES` property using
+> ```cmake
+> set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_ARCHITECTURES native)
+> ```
+> where `native` could be replaced by specific versions, see the [CMake docs](https://cmake.org/cmake/help/latest/prop_tgt/CUDA_ARCHITECTURES.html) for more information.
+
 ## Example
 Have a look at the [examples folder](https://github.com/neilkichler/cutangent/tree/main/examples).
 
