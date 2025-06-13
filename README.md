@@ -3,6 +3,42 @@
 CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangents.
 
 ## Supported Operations
+`+`
+`-`
+`*`
+`/`
+`-x`
+`==`
+`!=`
+`<=>`
+
+`sqr`
+`sqrt`
+`abs`
+`exp`
+`log`
+`pown`
+`pow`
+
+`sin`
+`cos`
+`tan`
+`asin`
+`acos`
+`atan`
+`atan2`
+`sinh`
+`cosh`
+`tanh`
+`asinh`
+`acosh` 
+`atanh`
+`erf`
+`erfc`
+
+`max`
+`min`
+`mid`
 
 ## Installation
 > Please make sure that you have installed everything mentioned in the section [Build Requirements](#build-requirements).
