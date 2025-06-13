@@ -41,6 +41,7 @@ constexpr auto f(auto x, auto y)
     auto cc = atan2(y, x);
     auto dd = atan2(y, 2.0);
     auto ee = atan2(2.0, x);
+    auto ff = recip(x);
 
     print(a);
     print(b);
@@ -70,6 +71,7 @@ constexpr auto f(auto x, auto y)
     print(cc);
     print(dd);
     print(ee);
+    print(ff);
     return a;
 }
 

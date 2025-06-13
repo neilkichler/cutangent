@@ -215,6 +215,14 @@ fn tangent<T> mid(tangent<T> v, tangent<T> lb, tangent<T> ub)
 }
 
 template<typename T>
+fn tangent<T> recip(tangent<T> x)
+{
+    using std::pow;
+
+    return { 1. / x.v, -x.d / pow(x.v, 2) };
+}
+
+template<typename T>
 fn tangent<T> sin(tangent<T> x)
 {
     using std::sin, std::cos;
