@@ -175,8 +175,15 @@ fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
     using std::max;
 
-    return { max(a.v, b.v),
-             a.v >= b.v ? a.d : b.d }; // '>=' instead of '>' due to subgradient
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { b.v, b.d };
+    } else if (delta > 0.0) {
+        return { a.v, a.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { a.v, max(a.d, b.d) };
+    }
 }
 
 template<typename T>
@@ -184,8 +191,15 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
     using std::min;
 
-    return { min(a.v, b.v),
-             a.v <= b.v ? a.d : b.d }; // '<=' instead of '<' due to subgradient
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { a.v, a.d };
+    } else if (delta > 0.0) {
+        return { b.v, b.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { b.v, min(a.d, b.d) };
+    }
 }
 
 template<typename T>
