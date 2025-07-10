@@ -193,13 +193,15 @@ fn tangent<T> abs(tangent<T> x)
 {
     using std::abs, std::copysign;
 
+    // If the value of x is zero we take the sign of the directional derivative part
+    // to match the more general notion of lexicographic differentiation as in
+    // Example 4.2 of https://doi.org/10.1080/10556788.2015.1025400
+    // and Section 6.2 of Griewanks stable piecewise linearizations:
+    // https://doi.org/10.1080/10556788.2013.796683
+
     constexpr T zero {};
-    if (x.v == zero) {
-        // NOTE: abs is not differentiable at x = 0. We take the subgradient at x = 0 to be zero.
-        return { zero, zero };
-    } else {
-        return { abs(x.v), copysign(1.0, x.v) * x.d };
-    }
+    T v = x.v == zero ? x.d : x.v;
+    return { abs(x.v), copysign(1.0, v) * x.d };
 }
 
 template<typename T>
