@@ -206,8 +206,8 @@ int main()
     constexpr int n         = 8;
     constexpr int n_threads = N_THREADS;
 
-    using T = cu::tangent<cu::mccormick<double>>;
-    // using T = cu::tangent<double>;
+    // using T = cu::tangent<cu::mccormick<double>>;
+    using T = cu::tangent<double>;
     // using T = double;
     heston::parameters<T> xs[n] {};
     T res[n];
