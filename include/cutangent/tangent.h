@@ -2,6 +2,7 @@
 #define CUTANGENT_TANGENT_H
 
 #include <compare>
+#include <utility>
 
 namespace cu
 {
@@ -51,9 +52,21 @@ constexpr T &value(tangent<T> &x)
 }
 
 template<typename T>
+constexpr T value(tangent<T> &&x)
+{
+    return std::move(x.v);
+}
+
+template<typename T>
 constexpr T &derivative(tangent<T> &x)
 {
     return x.d;
+}
+
+template<typename T>
+constexpr T derivative(tangent<T> &&x)
+{
+    return std::move(x.d);
 }
 
 } // namespace cu
