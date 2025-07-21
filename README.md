@@ -78,7 +78,7 @@ CPMAddPackage("gh:neilkichler/cutangent@0.0.1")
 ```cmake
 include(FetchContent)
 FetchContent_Declare(
-  cuinterval
+  cutangent
   GIT_REPOSITORY git@github.com:neilkichler/cutangent.git
   GIT_TAG main
 )
