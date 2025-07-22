@@ -40,5 +40,4 @@ packageProject(
     INCLUDE_DIR ${INCLUDE_PATH}
     INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
     COMPATIBILITY SameMinorVersion
-    DEPENDENCIES cuinterval
 )
