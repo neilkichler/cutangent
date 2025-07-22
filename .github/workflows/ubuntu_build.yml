@@ -26,16 +26,16 @@ jobs:
     env:
       CXX: "${{ matrix.config.name }}-${{ matrix.config.version }}"
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4     
-        with:
-          fetch-depth: 0  # Needed for full history
-
+    steps:    
       - name: Install build dependencies
         run: |
           apt-get update
           apt-get install -y cmake git ninja-build
+
+      - name: Checkout code
+        uses: actions/checkout@v4     
+        with:
+          fetch-depth: 0  # Needed for full history
 
       - name: Test git with HEAD
         run: |
