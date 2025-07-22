@@ -46,3 +46,15 @@ jobs:
 
       - name: Build project
         run: cmake --build build
+
+      - name: Build header-only test project
+        run: |
+          cd tests/header-only/multi-header
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Build single-header test projects
+        run: |
+          cd tests/header-only/single-header
+          cmake -S . -B build
+          cmake --build build
