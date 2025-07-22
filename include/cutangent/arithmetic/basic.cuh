@@ -367,6 +367,28 @@ fn tangent<T> exp(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> exp2(tangent<T> x)
+{
+    using std::exp2;
+
+    // NOTE: We use ln2_v<T> to allow for custom overloaded
+    //       constant numbers (this is allowed by C++20).
+    //       For example, in interval arithmetic, ln2_v<T>
+    //       represents and interval with the smallest interval
+    //       that still contains the real value of ln2.
+    auto v = exp2(x.v);
+    return { v, std::numbers::ln2_v<T> * v * x.d };
+}
+
+template<typename T>
+fn tangent<T> expm1(tangent<T> x)
+{
+    using std::expm1;
+
+    return { expm1(x.v), exp(x.v) * x.d };
+}
+
+template<typename T>
 fn tangent<T> log(tangent<T> x)
 {
     using std::log;
@@ -389,6 +411,14 @@ fn tangent<T> log10(tangent<T> x)
     using std::log10;
 
     return { log10(x.v), x.d / (x.v * std::numbers::ln10_v<T>)};
+}
+
+template<typename T>
+fn tangent<T> log1p(tangent<T> x)
+{
+    using std::log1p;
+
+    return { log1p(x.v), x.d / (1.0 + x.v) };
 }
 
 template<typename T>
