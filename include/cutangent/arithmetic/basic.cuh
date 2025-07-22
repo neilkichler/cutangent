@@ -556,6 +556,20 @@ fn bool isnan(tangent<T> a)
 }
 
 template<typename T>
+fn bool isnormal(tangent<T> x)
+{
+    using std::isnormal;
+
+    return isnormal(x.v);
+}
+
+template<typename T>
+fn bool isunordered(tangent<T> x, tangent<T> y)
+{
+    return isnan(x) || isnan(y);
+}
+
+template<typename T>
 fn tangent<T> remquo(tangent<T> x, tangent<T> y, int *quo)
 {
     using std::remquo;
@@ -596,15 +610,45 @@ fn tangent<T> erfc(tangent<T> x)
 }
 
 template<typename T>
+fn bool isgreater(tangent<T> x, tangent<T> y)
+{
+    return x.v > y.v;
+}
+
+template<typename T>
 fn bool operator>(tangent<T> x, auto y)
 {
     return x.v > y;
 }
 
 template<typename T>
+fn bool isless(tangent<T> x, tangent<T> y)
+{
+    return x.v < y.v;
+}
+
+template<typename T>
 fn bool operator<(tangent<T> x, auto y)
 {
     return x.v < y;
+}
+
+template<typename T>
+fn bool isgreaterequal(tangent<T> x, tangent<T> y)
+{
+    return x.v >= y.v;
+}
+
+template<typename T>
+fn bool islessequal(tangent<T> x, tangent<T> y)
+{
+    return x.v <= y.v;
+}
+
+template<typename T>
+fn bool islessgreater(tangent<T> x, tangent<T> y)
+{
+    return x.v < y.v || x.v > y.v;
 }
 
 #undef fn
