@@ -14,7 +14,7 @@ constexpr auto f(auto x, auto y)
     auto print = [](auto x) { printf("{%g, %g}\n", x.v, x.d); };
 
     int i = 0;
-    tangent<double> vs[35];
+    tangent<double> vs[36];
 
     vs[i++] = x + y;
     vs[i++] = x - y;
@@ -51,6 +51,7 @@ constexpr auto f(auto x, auto y)
     vs[i++] = hypot(x, y);
     vs[i++] = erf(x);
     vs[i++] = erfc(x);
+    vs[i++] = midpoint(x, y);
 
     for (auto v : vs) {
         print(v);

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <numeric>
 #include <type_traits>
 
 namespace cu
@@ -681,6 +682,14 @@ template<typename T>
 fn bool islessgreater(tangent<T> x, tangent<T> y)
 {
     return x.v < y.v || x.v > y.v;
+}
+
+template<typename T>
+fn T midpoint(T x, T y)
+{
+    using std::midpoint;
+
+    return { midpoint(x.v, y.v), x.v / 2.0 + y.v / 2.0 };
 }
 
 #undef fn
