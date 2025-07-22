@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25.2)
 
 project(
     cutangent
-    VERSION 0.0.1
+    VERSION 0.2.0
     DESCRIPTION "CUDA Tangent Subgradient library"
     LANGUAGES CXX CUDA)
 
