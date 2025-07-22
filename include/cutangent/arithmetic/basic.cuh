@@ -532,6 +532,38 @@ fn tangent<T> floor(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> trunc(tangent<T> x)
+{
+    using std::trunc;
+
+    return { trunc(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> round(tangent<T> x)
+{
+    using std::round;
+
+    return { round(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> nearbyint(tangent<T> x)
+{
+    using std::nearbyint;
+
+    return { nearbyint(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> rint(tangent<T> x)
+{
+    using std::rint;
+
+    return { rint(x.v), 0.0 };
+}
+
+template<typename T>
 fn bool isinf(tangent<T> x)
 {
     using ::isinf, std::isinf;
