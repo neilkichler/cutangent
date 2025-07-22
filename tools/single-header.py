@@ -115,7 +115,10 @@ def add_license(out):
 
 
 def generate_single_header():
-    with open(output_header, mode="w", encoding="utf-8") as header:
+    out = os.path.join(os.getcwd(), output_header)
+    dir = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(os.path.join(dir, ".."))
+    with open(out, mode="w", encoding="utf-8") as header:
         header.write(formatted_file_header())
         header.write("#ifndef CUTANGENT_CUH\n")
         header.write("#define CUTANGENT_CUH\n")
