@@ -97,12 +97,28 @@ def latest_commit_hash(repo_path="."):
     return result.stdout.strip()
 
 
+def project_version(filepath):
+    with open(filepath, "r") as file:
+        content = file.read()
+
+    # Try to find version from project(...) line
+    match = re.search(
+        r"project\s*\(\s*[^\s)]+\s+VERSION\s+(\d+)\.(\d+)\.(\d+)",
+        content,
+        re.IGNORECASE,
+    )
+    if match:
+        return ".".join(match.groups())
+
+    raise ValueError("Could not find CMake project version in the file.")
+
+
 def formatted_file_header():
     return file_header.format(
         generation_time=datetime.datetime.now().isoformat(timespec="minutes"),
         year=datetime.date.today().year,
         commit_hash=latest_commit_hash(),
-        version="0.1.0",
+        version=project_version("CMakeLists.txt"),
     )
 
 
