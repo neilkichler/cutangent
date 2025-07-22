@@ -37,6 +37,14 @@ jobs:
           apt-get update
           apt-get install -y cmake git ninja-build
 
+      - name: Test git with HEAD
+        run: |
+          git rev-parse HEAD
+
+      - name: Test git with origin/main
+        run: |
+          git rev-parse origin/main
+
       - name: Install compiler
         run: apt-get install -y $CXX
 
