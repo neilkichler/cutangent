@@ -692,6 +692,22 @@ fn T midpoint(T x, T y)
     return { midpoint(x.v, y.v), x.v / 2.0 + y.v / 2.0 };
 }
 
+template<typename T>
+fn T lerp(T a, T b, T t)
+{
+    using std::lerp;
+
+    return { lerp(a.v, b.v, t.v), (a.v - t.v) * a.d + t.v * b.d + (b.v - a.v) * t.d };
+}
+
+template<typename T>
+fn T lerp(T a, T b, arithmetic auto t)
+{
+    using std::lerp;
+
+    return { lerp(a.v, b.v, t), (a.v - t) * a.d + t * b.d };
+}
+
 #undef fn
 
 } // namespace cu
