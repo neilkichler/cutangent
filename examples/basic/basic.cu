@@ -42,6 +42,9 @@ constexpr auto f(auto x, auto y)
     auto dd = atan2(y, 2.0);
     auto ee = atan2(2.0, x);
     auto ff = recip(x);
+    auto gg = exp2(x);
+    auto hh = expm1(x);
+    auto ii = log1p(x);
 
     print(a);
     print(b);
@@ -72,6 +75,9 @@ constexpr auto f(auto x, auto y)
     print(dd);
     print(ee);
     print(ff);
+    print(gg);
+    print(hh);
+    print(ii);
     return a;
 }
 

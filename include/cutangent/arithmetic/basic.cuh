@@ -383,7 +383,7 @@ fn tangent<T> exp2(tangent<T> x)
 template<typename T>
 fn tangent<T> expm1(tangent<T> x)
 {
-    using std::expm1;
+    using std::exp, std::expm1;
 
     return { expm1(x.v), exp(x.v) * x.d };
 }
