@@ -483,6 +483,15 @@ fn tangent<T> cbrt(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> hypot(tangent<T> x, tangent<T> y)
+{
+    using std::hypot;
+
+    auto v = hypot(x.v, y.v);
+    return { v, x.v * x.d / v + y.v * y.d / v };
+}
+
+template<typename T>
 fn tangent<T> ceil(tangent<T> x)
 {
     using std::ceil;
