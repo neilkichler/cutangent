@@ -28,7 +28,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4     
+        with:
+          fetch-depth: 0  # Needed for full history
 
       - name: Install build dependencies
         run: |
@@ -52,6 +54,11 @@ jobs:
           cd tests/header-only/multi-header
           cmake -S . -B build
           cmake --build build
+
+      - name: Set up Python # required for generation of single-header
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Build single-header test projects
         run: |
