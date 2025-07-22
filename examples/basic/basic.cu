@@ -6,7 +6,6 @@
 #include <cutangent/format.h>
 
 #include <cstdio>
-#include <vector>
 
 using cu::tangent;
 
@@ -15,7 +14,7 @@ constexpr auto f(auto x, auto y)
     auto print = [](auto x) { printf("{%g, %g}\n", x.v, x.d); };
 
     int i = 0;
-    std::vector<tangent<double>> vs(35);
+    tangent<double> vs[35];
 
     vs[i++] = x + y;
     vs[i++] = x - y;
