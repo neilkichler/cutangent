@@ -188,6 +188,22 @@ fn tangent<T> max(tangent<T> a, tangent<T> b)
 }
 
 template<typename T>
+fn tangent<T> fmax(tangent<T> a, tangent<T> b)
+{
+    using std::fmax;
+
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { b.v, b.d };
+    } else if (delta > 0.0) {
+        return { a.v, a.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { a.v, fmax(a.d, b.d) };
+    }
+}
+
+template<typename T>
 fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
     using std::min;
@@ -200,6 +216,22 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
     } else {
         // many elements of the subdifferential could be chosen
         return { b.v, min(a.d, b.d) };
+    }
+}
+
+template<typename T>
+fn tangent<T> fmin(tangent<T> a, tangent<T> b)
+{
+    using std::fmin;
+
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { a.v, a.d };
+    } else if (delta > 0.0) {
+        return { b.v, b.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { b.v, fmin(a.d, b.d) };
     }
 }
 
@@ -217,6 +249,16 @@ fn tangent<T> abs(tangent<T> x)
     constexpr T zero {};
     T v = x.v == zero ? x.d : x.v;
     return { abs(x.v), copysign(1.0, v) * x.d };
+}
+
+template<typename T>
+fn tangent<T> fabs(tangent<T> x)
+{
+    using std::fabs, std::copysign;
+
+    constexpr T zero {};
+    T v = x.v == zero ? x.d : x.v;
+    return { fabs(x.v), copysign(1.0, v) * x.d };
 }
 
 template<typename T>
