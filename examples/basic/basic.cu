@@ -46,6 +46,8 @@ constexpr auto f(auto x, auto y)
     auto hh = expm1(x);
     auto ii = log1p(x);
     auto jj = hypot(x, y);
+    auto kk = erf(x);
+    auto ll = erfc(x);
 
     print(a);
     print(b);
@@ -80,6 +82,8 @@ constexpr auto f(auto x, auto y)
     print(hh);
     print(ii);
     print(jj);
+    print(kk);
+    print(ll);
     return a;
 }
 
