@@ -87,7 +87,7 @@ def combine_files(out, filename: str) -> int:
 
 def latest_commit_hash(repo_path="."):
     result = subprocess.run(
-        ["git", "rev-parse", "origin/main"],
+        ["git", "rev-parse", "HEAD"],
         cwd=repo_path,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
