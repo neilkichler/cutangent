@@ -31,7 +31,6 @@ target_link_libraries(tests PRIVATE cutangent ut warnings)
 find_package(CUDAToolkit REQUIRED)
 target_link_libraries(tests PRIVATE CUDA::cuda_driver)
 target_link_libraries(tests PRIVATE CUDA::cudart)
-# target_link_libraries(tests PRIVATE CUDA::curand)
 
 # Register tests for use in ctest
 add_test(NAME testcutangent COMMAND tests)
