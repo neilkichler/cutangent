@@ -5,7 +5,8 @@
 #include <cutangent/cutangent.cuh>
 #include <cutangent/format.h>
 
-#include <iostream>
+#include <cstdio>
+#include <vector>
 
 using cu::tangent;
 
@@ -13,78 +14,50 @@ constexpr auto f(auto x, auto y)
 {
     auto print = [](auto x) { printf("{%g, %g}\n", x.v, x.d); };
 
-    auto a  = x + y;
-    auto b  = x - y;
-    auto c  = x * y;
-    auto d  = x / y;
-    auto e  = max(x, y);
-    auto f  = min(x, y);
-    auto g  = mid(x, y, y);
-    auto h  = sin(x);
-    auto i  = cos(x);
-    auto j  = exp(x);
-    auto k  = log(x);
-    auto l  = pown(x, 2);
-    auto m  = x * 2;
-    auto n  = log2(x);
-    auto o  = log10(x);
-    auto p  = tan(x);
-    auto q  = asin(x);
-    auto r  = acos(x);
-    auto s  = atan(x);
-    auto t  = sinh(x);
-    auto u  = cosh(x);
-    auto v  = tanh(x);
-    auto w  = asinh(x);
-    auto aa = acosh(x);
-    auto bb = atanh(x);
-    auto cc = atan2(y, x);
-    auto dd = atan2(y, 2.0);
-    auto ee = atan2(2.0, x);
-    auto ff = recip(x);
-    auto gg = exp2(x);
-    auto hh = expm1(x);
-    auto ii = log1p(x);
-    auto jj = hypot(x, y);
-    auto kk = erf(x);
-    auto ll = erfc(x);
+    int i = 0;
+    std::vector<tangent<double>> vs(35);
 
-    print(a);
-    print(b);
-    print(c);
-    print(d);
-    print(e);
-    print(f);
-    print(g);
-    print(h);
-    print(i);
-    print(j);
-    print(k);
-    print(l);
-    print(m);
-    print(n);
-    print(o);
-    print(p);
-    print(q);
-    print(r);
-    print(s);
-    print(t);
-    print(u);
-    print(v);
-    print(w);
-    print(aa);
-    print(bb);
-    print(cc);
-    print(dd);
-    print(ee);
-    print(ff);
-    print(gg);
-    print(hh);
-    print(ii);
-    print(jj);
-    print(kk);
-    print(ll);
-    return a;
+    vs[i++] = x + y;
+    vs[i++] = x - y;
+    vs[i++] = x * y;
+    vs[i++] = x / y;
+    vs[i++] = max(x, y);
+    vs[i++] = min(x, y);
+    vs[i++] = mid(x, y, y);
+    vs[i++] = sin(x);
+    vs[i++] = cos(x);
+    vs[i++] = exp(x);
+    vs[i++] = log(x);
+    vs[i++] = pown(x, 2);
+    vs[i++] = x * 2;
+    vs[i++] = log2(x);
+    vs[i++] = log10(x);
+    vs[i++] = tan(x);
+    vs[i++] = asin(x);
+    vs[i++] = acos(x);
+    vs[i++] = atan(x);
+    vs[i++] = sinh(x);
+    vs[i++] = cosh(x);
+    vs[i++] = tanh(x);
+    vs[i++] = asinh(x);
+    vs[i++] = acosh(x);
+    vs[i++] = atanh(x);
+    vs[i++] = atan2(y, x);
+    vs[i++] = atan2(y, 2.0);
+    vs[i++] = atan2(2.0, x);
+    vs[i++] = recip(x);
+    vs[i++] = exp2(x);
+    vs[i++] = expm1(x);
+    vs[i++] = log1p(x);
+    vs[i++] = hypot(x, y);
+    vs[i++] = erf(x);
+    vs[i++] = erfc(x);
+
+    for (auto v : vs) {
+        print(v);
+    }
+
+    return vs[0];
 }
 
 __global__ void kernel(tangent<double> *xs, tangent<double> *ys,
