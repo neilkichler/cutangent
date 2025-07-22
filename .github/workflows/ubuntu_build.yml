@@ -34,18 +34,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4     
-        with:
-          fetch-depth: 0  # Needed for full history
-
-      - name: Test git with HEAD
-        run: |
-          git config --global --add safe.directory '*'
-          git rev-parse HEAD
-
-      - name: Test git with origin/main
-        run: |
-          git config --global --add safe.directory '*'
-          git rev-parse origin/main
 
       - name: Install compiler
         run: apt-get install -y $CXX
