@@ -584,7 +584,7 @@ fn tangent<T> erf(tangent<T> x)
 {
     using std::erf, std::exp, std::pow, std::sqrt;
 
-    return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+    return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi_v<T>) };
 }
 
 template<typename T>
@@ -592,7 +592,7 @@ fn tangent<T> erfc(tangent<T> x)
 {
     using std::erfc, std::exp, std::pow, std::sqrt;
 
-    return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+    return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi_v<T>) };
 }
 
 template<typename T>
