@@ -60,6 +60,7 @@ jobs:
 
       - name: Build single-header test projects
         run: |
+          git config --global --add safe.directory '*'
           cd tests/header-only/single-header
           cmake -S . -B build
           cmake --build build
