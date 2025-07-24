@@ -9,7 +9,7 @@
 
 </h1>
 
-CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangents.
+CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangents, by operator-overloading.
 
 ## Supported Operations
 `+`
