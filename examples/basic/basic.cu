@@ -6,15 +6,19 @@
 #include <cutangent/format.h>
 
 #include <cstdio>
+#include <iostream>
 
-using cu::tangent;
+using T = cu::tangent<double>;
 
-constexpr auto f(auto x, auto y)
+constexpr int n = 36;
+
+// the computation does not make any sense and is just here to show all the operations
+constexpr auto f(int out_i, auto x, auto y)
 {
-    auto print = [](auto x) { printf("{%g, %g}\n", x.v, x.d); };
+    auto print = [out_i](auto x) { printf("[%2d] {%g, %g}\n", out_i, x.v, x.d); };
 
     int i = 0;
-    tangent<double> vs[36];
+    T vs[n];
 
     vs[i++] = x + y;
     vs[i++] = x - y;
@@ -53,38 +57,29 @@ constexpr auto f(auto x, auto y)
     vs[i++] = erfc(x);
     vs[i++] = midpoint(x, y);
 
-    for (auto v : vs) {
-        print(v);
-    }
+    print(vs[out_i]);
 
-    return vs[0];
+    return vs[out_i];
 }
 
-__global__ void kernel(tangent<double> *xs, tangent<double> *ys,
-                       tangent<double> *res, int n)
+__global__ void kernel(T *xs, T *ys, T *res, int n)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) {
-        res[i] = f(xs[i], ys[i]);
+        res[i] = f(i, xs[i], ys[i]);
     }
 }
 
 int main()
 {
-    constexpr int n = 16;
-    using T         = tangent<double>;
     T xs[n], ys[n], res[n];
 
     // generate dummy data
     for (int i = 0; i < n; i++) {
-        double v = i;
+        double v = i + 1;
         xs[i]    = { v, 1.0 };
         ys[i]    = { v, 0.0 };
     }
-
-    // for (auto el : xs) {
-    //     std::cout << el << std::endl;
-    // }
 
     T *d_xs, *d_ys, *d_res;
     CUDA_CHECK(cudaMalloc(&d_xs, n * sizeof(*xs)));
@@ -94,13 +89,18 @@ int main()
     CUDA_CHECK(cudaMemcpy(d_xs, xs, n * sizeof(*xs), cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(d_ys, ys, n * sizeof(*ys), cudaMemcpyHostToDevice));
 
+    std::cout << "Results (GPU):\n";
+    std::cout << "--------------\n";
     kernel<<<n, 1>>>(d_xs, d_ys, d_res, n);
 
     CUDA_CHECK(cudaMemcpy(res, d_res, n * sizeof(*res), cudaMemcpyDeviceToHost));
 
-    // for (auto el : res) {
-    //     std::cout << el << std::endl;
-    // }
+    std::cout << '\n';
+    std::cout << "Results (CPU):\n";
+    std::cout << "--------------\n";
+    for (int i = 0; auto el : res) {
+        std::cout << std::format("[{:>2}] {:g}\n", i++, el);
+    }
 
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_ys));
