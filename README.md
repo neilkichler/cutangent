@@ -88,7 +88,7 @@ CPMAddPackage("gh:neilkichler/cutangent@0.2.0")
 include(FetchContent)
 FetchContent_Declare(
   cutangent
-  GIT_REPOSITORY git@github.com:neilkichler/cutangent.git
+  GIT_REPOSITORY https://github.com/neilkichler/cutangent.git
   GIT_TAG v0.2.0
 )
 FetchContent_MakeAvailable(cutangent)
