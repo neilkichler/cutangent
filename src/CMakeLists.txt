@@ -6,6 +6,7 @@ set(headers
     "${LIB_PATH}/arithmetic/intrinsic.cuh"
     "${LIB_PATH}/cutangent.cuh"
     "${LIB_PATH}/tangent.h"
+    "${LIB_PATH}/format.h"
 )
 
 add_library(cutangent "main.cu" ${headers})
