@@ -64,8 +64,8 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> sqrt_up   (tangent<double> x) { auto sqrt_x_v = sqrt_up  (x.v); return { sqrt_x_v, div_up  (x.d, add_down(2.0 * sqrt_x_v, x.v == 0.0 ? std::numeric_limits<double>::min() : 0.0)) }; }
     template<> inline __device__ tangent<double> int_down  (tangent<double> x) { return floor(x); }
     template<> inline __device__ tangent<double> int_up    (tangent<double> x) { return ceil(x); }
-    // template<> inline __device__ double round_away(double x)           { return round(x); }
-    // template<> inline __device__ double round_even(double x)           { return nearbyint(x); }
+    template<> inline __device__ tangent<double> round_away(tangent<double> x) { return round(x); }
+    template<> inline __device__ tangent<double> round_even(tangent<double> x) { return nearbyint(x); }
     template<> inline __device__ tangent<double> neg_inf() { return { __longlong_as_double(0xfff0000000000000ull), __longlong_as_double(0xfff0000000000000ull) }; }
     template<> inline __device__ tangent<double> pos_inf() { return { __longlong_as_double(0x7ff0000000000000ull), __longlong_as_double(0x7ff0000000000000ull) }; }
     template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), nextafter(x.d, pos_inf<tangent<double>>().d) }; }
