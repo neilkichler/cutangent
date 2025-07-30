@@ -13,7 +13,6 @@ template<typename T>
 struct numeric_limits<cu::tangent<T>>
 {
     // clang-format off
-    static constexpr bool is_specialized = true;
     static constexpr cu::tangent<T>           min() noexcept { return numeric_limits<T>::min(); }
     static constexpr cu::tangent<T>           max() noexcept { return numeric_limits<T>::max(); }
     static constexpr cu::tangent<T>        lowest() noexcept { return numeric_limits<T>::lowest(); }
@@ -23,6 +22,7 @@ struct numeric_limits<cu::tangent<T>>
     static constexpr cu::tangent<T>     quiet_NaN() noexcept { return numeric_limits<T>::quiet_NaN(); }
     static constexpr cu::tangent<T> signaling_NaN() noexcept { return numeric_limits<T>::signaling_NaN(); }
     static constexpr cu::tangent<T>    denorm_min() noexcept { return numeric_limits<T>::denorm_min(); }
+    static constexpr bool is_specialized           = true;
     static constexpr bool is_signed                = true;
     static constexpr bool is_integer               = false;
     static constexpr bool is_exact                 = false;
