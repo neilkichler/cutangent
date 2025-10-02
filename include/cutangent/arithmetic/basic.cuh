@@ -610,7 +610,7 @@ fn tangent<T> rint(tangent<T> x)
 template<typename T>
 fn bool isinf(tangent<T> x)
 {
-    using ::isinf, std::isinf;
+    using std::isinf;
 
     return isinf(x.v);
 }
