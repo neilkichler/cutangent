@@ -22,8 +22,8 @@ struct tangent
     { }
 
     constexpr tangent(auto value, auto derivative)
-        : v { value }
-        , d { derivative }
+        : v { static_cast<T>(value) }
+        , d { static_cast<T>(derivative) }
     { }
 
     constexpr auto operator<=>(const tangent &other) const noexcept { return v <=> other.v; }

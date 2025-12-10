@@ -82,6 +82,7 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), nextafter(x.d, pos_inf<tangent<double>>().d) }; }
     template<> inline __device__ tangent<double> prev_floating(tangent<double> x) { return { nextafter(x.v, neg_inf<tangent<double>>().v), nextafter(x.d, neg_inf<tangent<double>>().d) }; }
 
+// For handling basic operations between constants and tangents
 #define fn(T) template<typename T> inline constexpr __device__ auto
 
     fn(T) add_down(const T &x, typename T::value_type y) -> T { return { add_down(x.v, y), x.d }; }
