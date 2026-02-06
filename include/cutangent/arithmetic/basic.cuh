@@ -407,6 +407,13 @@ fn tangent<T> pown(auto x, tangent<T> n)
     return { pow(x, n.v), pow(x, n.v) * log(x) * n.d };
 }
 
+// The power function specific for tangent<interval<T>>
+template<typename T>
+fn tangent<T> powt(tangent<T> x, typename T::value_type n)
+{
+    return { powt(x.v, n), n * powt(x.v, n - 1) * x.d };
+}
+
 template<typename T>
 fn tangent<T> pow(tangent<T> x, auto n)
 {
