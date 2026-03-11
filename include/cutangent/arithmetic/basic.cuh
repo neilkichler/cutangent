@@ -407,7 +407,7 @@ fn tangent<T> pown(auto x, tangent<T> n)
     return { pow(x, n.v), pow(x, n.v) * log(x) * n.d };
 }
 
-// The power function specific for tangent<interval<T>>
+// The power function specific for tangent<interval<T>>, to do: change typename T::value_type to auto
 template<typename T>
 fn tangent<T> powt(tangent<T> x, typename T::value_type n)
 {
@@ -486,7 +486,7 @@ fn tangent<T> floor(tangent<T> x)
 template<typename T>
 fn bool isinf(tangent<T> x)
 {
-    using ::isinf, std::isinf;
+    using std::isinf;
 
     return isinf(x.v);
 }
