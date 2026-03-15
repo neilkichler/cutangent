@@ -279,7 +279,7 @@ fn tangent<T> recip(tangent<T> x)
 {
     using std::pow;
 
-    return { 1. / x.v, -x.d / pow(x.v, 2) };
+    return { static_cast<T>(1.) / x.v, -x.d / pow(x.v, 2) };
 }
 
 template<typename T>
@@ -468,7 +468,7 @@ fn tangent<T> log1p(tangent<T> x)
 template<typename T>
 fn tangent<T> sqr(tangent<T> x)
 {
-    return { sqr(x.v), 2.0 * x.v * x.d };
+    return { sqr(x.v), static_cast<T>(2.0) * x.v * x.d };
 }
 
 template<typename T>
@@ -478,7 +478,7 @@ fn tangent<T> sqrt(tangent<T> x)
 
     constexpr T zero {};
     // NOTE: We currently do not treat the case where x.v == 0, x.d > 0 to map to +inf.
-    return { sqrt(x.v), x.d / (2.0 * sqrt(x.v) + (x.v == zero ? numeric_limits<T>::min() : zero)) };
+    return { sqrt(x.v), x.d / (static_cast<T>(2.0) * sqrt(x.v) + (x.v == zero ? numeric_limits<T>::min() : zero)) };
 }
 
 template<typename T>
