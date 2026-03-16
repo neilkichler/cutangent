@@ -5,7 +5,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numbers>
+#include <numeric>
 #include <type_traits>
 
 namespace cu
@@ -175,8 +177,31 @@ fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
     using std::max;
 
-    return { max(a.v, b.v),
-             a.v >= b.v ? a.d : b.d }; // '>=' instead of '>' due to subgradient
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { b.v, b.d };
+    } else if (delta > 0.0) {
+        return { a.v, a.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { a.v, max(a.d, b.d) };
+    }
+}
+
+template<typename T>
+fn tangent<T> fmax(tangent<T> a, tangent<T> b)
+{
+    using std::fmax;
+
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { b.v, b.d };
+    } else if (delta > 0.0) {
+        return { a.v, a.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { a.v, fmax(a.d, b.d) };
+    }
 }
 
 template<typename T>
@@ -184,8 +209,31 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
     using std::min;
 
-    return { min(a.v, b.v),
-             a.v <= b.v ? a.d : b.d }; // '<=' instead of '<' due to subgradient
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { a.v, a.d };
+    } else if (delta > 0.0) {
+        return { b.v, b.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { b.v, min(a.d, b.d) };
+    }
+}
+
+template<typename T>
+fn tangent<T> fmin(tangent<T> a, tangent<T> b)
+{
+    using std::fmin;
+
+    T delta = a.v - b.v;
+    if (delta < 0.0) {
+        return { a.v, a.d };
+    } else if (delta > 0.0) {
+        return { b.v, b.d };
+    } else {
+        // many elements of the subdifferential could be chosen
+        return { b.v, fmin(a.d, b.d) };
+    }
 }
 
 template<typename T>
@@ -193,13 +241,25 @@ fn tangent<T> abs(tangent<T> x)
 {
     using std::abs, std::copysign;
 
+    // If the value of x is zero we take the sign of the directional derivative part
+    // to match the more general notion of lexicographic differentiation as in
+    // Example 4.2 of https://doi.org/10.1080/10556788.2015.1025400
+    // and Section 6.2 of Griewanks stable piecewise linearizations:
+    // https://doi.org/10.1080/10556788.2013.796683
+
     constexpr T zero {};
-    if (x.v == zero) {
-        // NOTE: abs is not differentiable at x = 0. We take the subgradient at x = 0 to be zero.
-        return { zero, zero };
-    } else {
-        return { abs(x.v), copysign(1.0, x.v) * x.d };
-    }
+    T v = x.v == zero ? x.d : x.v;
+    return { abs(x.v), copysign(1.0, v) * x.d };
+}
+
+template<typename T>
+fn tangent<T> fabs(tangent<T> x)
+{
+    using std::fabs, std::copysign;
+
+    constexpr T zero {};
+    T v = x.v == zero ? x.d : x.v;
+    return { fabs(x.v), copysign(1.0, v) * x.d };
 }
 
 template<typename T>
@@ -351,6 +411,28 @@ fn tangent<T> exp(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> exp2(tangent<T> x)
+{
+    using std::exp2;
+
+    // NOTE: We use ln2_v<T> to allow for custom overloaded
+    //       constant numbers (this is allowed by C++20).
+    //       For example, in interval arithmetic, ln2_v<T>
+    //       represents and interval with the smallest interval
+    //       that still contains the real value of ln2.
+    auto v = exp2(x.v);
+    return { v, std::numbers::ln2_v<T> * v * x.d };
+}
+
+template<typename T>
+fn tangent<T> expm1(tangent<T> x)
+{
+    using std::exp, std::expm1;
+
+    return { expm1(x.v), exp(x.v) * x.d };
+}
+
+template<typename T>
 fn tangent<T> log(tangent<T> x)
 {
     using std::log;
@@ -373,6 +455,14 @@ fn tangent<T> log10(tangent<T> x)
     using std::log10;
 
     return { log10(x.v), x.d / (x.v * std::numbers::ln10_v<T>)};
+}
+
+template<typename T>
+fn tangent<T> log1p(tangent<T> x)
+{
+    using std::log1p;
+
+    return { log1p(x.v), x.d / (1.0 + x.v) };
 }
 
 template<typename T>
@@ -407,7 +497,7 @@ fn tangent<T> pown(auto x, tangent<T> n)
     return { pow(x, n.v), pow(x, n.v) * log(x) * n.d };
 }
 
-// The power function specific for tangent<interval<T>>, to do: change typename T::value_type to auto
+// The power function specific for tangent<interval<T>>
 template<typename T>
 fn tangent<T> powt(tangent<T> x, typename T::value_type n)
 {
@@ -441,6 +531,15 @@ fn tangent<T> cbrt(tangent<T> x)
     using std::cbrt;
 
     return { cbrt(x.v), x.d / (static_cast<T>(3.0) * sqr(cbrt(x.v))) };
+}
+
+template<typename T>
+fn tangent<T> hypot(tangent<T> x, tangent<T> y)
+{
+    using std::hypot;
+
+    auto v = hypot(x.v, y.v);
+    return { v, x.v * x.d / v + y.v * y.d / v };
 }
 
 template<typename T>
@@ -484,6 +583,38 @@ fn tangent<T> floor(tangent<T> x)
 }
 
 template<typename T>
+fn tangent<T> trunc(tangent<T> x)
+{
+    using std::trunc;
+
+    return { trunc(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> round(tangent<T> x)
+{
+    using std::round;
+
+    return { round(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> nearbyint(tangent<T> x)
+{
+    using std::nearbyint;
+
+    return { nearbyint(x.v), 0.0 };
+}
+
+template<typename T>
+fn tangent<T> rint(tangent<T> x)
+{
+    using std::rint;
+
+    return { rint(x.v), 0.0 };
+}
+
+template<typename T>
 fn bool isinf(tangent<T> x)
 {
     using std::isinf;
@@ -505,6 +636,20 @@ fn bool isnan(tangent<T> a)
     using std::isnan;
 
     return isnan(a.v);
+}
+
+template<typename T>
+fn bool isnormal(tangent<T> x)
+{
+    using std::isnormal;
+
+    return isnormal(x.v);
+}
+
+template<typename T>
+fn bool isunordered(tangent<T> x, tangent<T> y)
+{
+    return isnan(x) || isnan(y);
 }
 
 template<typename T>
@@ -536,7 +681,7 @@ fn tangent<T> erf(tangent<T> x)
 {
     using std::erf, std::exp, std::pow, std::sqrt;
 
-    return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+    return { erf(x.v), 2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi_v<T>) };
 }
 
 template<typename T>
@@ -544,7 +689,13 @@ fn tangent<T> erfc(tangent<T> x)
 {
     using std::erfc, std::exp, std::pow, std::sqrt;
 
-    return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi) };
+    return { erfc(x.v), -2.0 * x.d * exp(-pow(x.v, 2)) / sqrt(std::numbers::pi_v<T>) };
+}
+
+template<typename T>
+fn bool isgreater(tangent<T> x, tangent<T> y)
+{
+    return x.v > y.v;
 }
 
 template<typename T>
@@ -554,9 +705,57 @@ fn bool operator>(tangent<T> x, auto y)
 }
 
 template<typename T>
+fn bool isless(tangent<T> x, tangent<T> y)
+{
+    return x.v < y.v;
+}
+
+template<typename T>
 fn bool operator<(tangent<T> x, auto y)
 {
     return x.v < y;
+}
+
+template<typename T>
+fn bool isgreaterequal(tangent<T> x, tangent<T> y)
+{
+    return x.v >= y.v;
+}
+
+template<typename T>
+fn bool islessequal(tangent<T> x, tangent<T> y)
+{
+    return x.v <= y.v;
+}
+
+template<typename T>
+fn bool islessgreater(tangent<T> x, tangent<T> y)
+{
+    return x.v < y.v || x.v > y.v;
+}
+
+template<typename T>
+fn T midpoint(T x, T y)
+{
+    using std::midpoint;
+
+    return { midpoint(x.v, y.v), x.v / 2.0 + y.v / 2.0 };
+}
+
+template<typename T>
+fn T lerp(T a, T b, T t)
+{
+    using std::lerp;
+
+    return { lerp(a.v, b.v, t.v), (a.v - t.v) * a.d + t.v * b.d + (b.v - a.v) * t.d };
+}
+
+template<typename T>
+fn T lerp(T a, T b, arithmetic auto t)
+{
+    using std::lerp;
+
+    return { lerp(a.v, b.v, t), (a.v - t) * a.d + t * b.d };
 }
 
 #undef fn

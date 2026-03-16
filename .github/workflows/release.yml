@@ -1,0 +1,50 @@
+name: Release on GitHub with automatic single-header and header-only builds
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history
+
+      - name: Set up Python # required for generation of single-header
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create single-header library
+        run: |
+          python3 tools/single-header.py
+
+      - name: Create header-only library as folder
+        run: |
+          git mv include/cutangent cutangent
+          git mv LICENSE cutangent
+          git mv README.md cutangent
+
+      - name: Zip header-only library
+        run: |
+          zip -r cutangent.zip cutangent
+
+      - name: Create compressed tarball header-only library
+        run: |
+          tar -czf cutangent.tar.gz cutangent
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            cutangent.zip
+            cutangent.tar.gz
+            cutangent.cuh

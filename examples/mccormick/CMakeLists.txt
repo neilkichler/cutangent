@@ -1,5 +1,3 @@
-add_executable(mccormick mccormick.cu)
-
 include(FetchContent)
 FetchContent_Declare(
   cumccormick
@@ -8,8 +6,5 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cumccormick)
 
+add_example(mccormick)
 target_link_libraries(mccormick PUBLIC cumccormick)
-
-target_compile_features(mccormick PRIVATE cxx_std_20 cuda_std_20)
-set_target_properties(mccormick PROPERTIES CUDA_ARCHITECTURES native)
-target_link_libraries(mccormick PRIVATE ${PROJECT_NAME} warnings)

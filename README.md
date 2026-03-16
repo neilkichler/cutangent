@@ -1,6 +1,15 @@
-<h1 align='center'>CuTangent</h1>
+<h1 align='center'>CuTangent
 
-CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangents.
+[![Cpp Version](https://img.shields.io/badge/requires-C++20-blue)](https://github.com/neilkichler/cuinterval/tree/main?tab=readme-ov-file#build-requirements)
+[![CUDA Version](https://img.shields.io/badge/CUDA-12+-8A2BE2?logo=nvidia)](https://github.com/neilkichler/cuinterval/tree/main?tab=readme-ov-file#build-requirements)
+[![CMake Version](https://img.shields.io/badge/CMake-3.25.2+-blue?logo=cmake)](https://github.com/neilkichler/cuinterval/tree/main?tab=readme-ov-file#build-requirements)
+[![Docs](https://img.shields.io/badge/documentation-latest-8A2BE2)](https://neilkichler.github.io/cuinterval)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16272108.svg)](https://doi.org/10.5281/zenodo.16272108)
+[![GitHub License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/neilkichler/cuinterval/blob/main/LICENSE)
+
+</h1>
+
+CuTangent is a CUDA library for computing forward-mode subgradients, i.e. tangents, by operator-overloading.
 
 ## Supported Operations
 `+`
@@ -71,16 +80,16 @@ cmake --install build
 
 #### [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
 ```cmake
-CPMAddPackage("gh:neilkichler/cutangent@0.0.1")
+CPMAddPackage("gh:neilkichler/cutangent@0.2.0")
 ```
 
 #### [FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)
 ```cmake
 include(FetchContent)
 FetchContent_Declare(
-  cuinterval
-  GIT_REPOSITORY git@github.com:neilkichler/cutangent.git
-  GIT_TAG main
+  cutangent
+  GIT_REPOSITORY https://github.com/neilkichler/cutangent.git
+  GIT_TAG v0.2.0
 )
 FetchContent_MakeAvailable(cutangent)
 ```

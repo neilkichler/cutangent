@@ -1,0 +1,66 @@
+name: CUDA Build
+
+on:
+  push:
+    branches: main
+
+jobs:
+  build:
+    name: "${{ matrix.os }}-cuda-${{ matrix.cuda }}-${{ matrix.config.name }}-${{ matrix.config.version }}"
+    runs-on: ${{ matrix.os }}
+
+    container:
+      image: nvidia/cuda:${{ matrix.cuda }}-devel-ubuntu24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        cuda: [12.5.1, 12.6.0, 12.6.1, 12.6.2, 12.6.3, 12.8.0, 12.8.1, 12.9.0, 12.9.1]
+        config:
+          - { name: clang++, version: 17 }
+          - { name: clang++, version: 18 }
+          - { name: g++, version: 12 }
+          - { name: g++, version: 13 }
+          - { name: g++, version: 14 }
+    env:
+      CXX: "${{ matrix.config.name }}-${{ matrix.config.version }}"
+
+    steps:    
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y cmake git ninja-build
+
+      - name: Checkout code
+        uses: actions/checkout@v4     
+
+      - name: Install compiler
+        run: apt-get install -y $CXX
+
+      - name: Show compiler version
+        run: $CXX --version
+
+      - name: Configure project with CMake
+        run: cmake --preset debug
+
+      - name: Build project
+        run: cmake --build build
+
+      - name: Build header-only test project
+        run: |
+          cd tests/header-only/multi-header
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Set up Python # required for generation of single-header
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build single-header test projects
+        run: |
+          git config --global --add safe.directory '*'
+          cd tests/header-only/single-header
+          cmake -S . -B build
+          cmake --build build

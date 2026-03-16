@@ -6,6 +6,8 @@ set(headers
     "${LIB_PATH}/arithmetic/intrinsic.cuh"
     "${LIB_PATH}/cutangent.cuh"
     "${LIB_PATH}/tangent.h"
+    "${LIB_PATH}/format.h"
+    "${LIB_PATH}/limits.h"
 )
 
 add_library(cutangent "main.cu" ${headers})
@@ -39,6 +41,5 @@ packageProject(
     BINARY_DIR ${PROJECT_BINARY_DIR}
     INCLUDE_DIR ${INCLUDE_PATH}
     INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
-    DEPENDENCIES cuinterval
+    COMPATIBILITY SameMinorVersion
 )
