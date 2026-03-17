@@ -10,7 +10,7 @@
 
 using T = cu::tangent<double>;
 
-constexpr int n = 36;
+constexpr int n = 38;
 
 // the computation does not make any sense and is just here to show all the operations
 constexpr auto f(int out_i, auto x, auto y)
@@ -56,6 +56,8 @@ constexpr auto f(int out_i, auto x, auto y)
     vs[i++] = erf(x);
     vs[i++] = erfc(x);
     vs[i++] = midpoint(x, y);
+    vs[i++] = lerp(x, y, y);
+    vs[i++] = lerp(x, y, 0.5);
 
     print(vs[out_i]);
 

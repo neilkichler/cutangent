@@ -10,46 +10,68 @@
 
 #include <iostream>
 
-using cu::tangent;
-
-template<typename T>
-using I = cu::interval<T>;
-
-using T = tangent<I<double>>;
-
 constexpr auto f(auto x, auto y)
 {
-    // Currently supported functions:
+    using T = decltype(x);
 
-    // auto a = neg(x);
-    // auto a = add(x, y);
-    // auto a = sub(x, y);
-    // auto a = mul(x, y);
-    // auto a = div(x, y);
-    // auto a = x + y;
-    // auto a = x - y;
-    // auto a = x / y;
-    auto a = x * y;
-    // auto a = sqr(x);
-    // auto a = sqrt(x);
-    // auto a = abs(x);
-    // auto a = exp(x);
-    // auto a = log(x);
-    // auto a = recip(x);
-    // auto a = cos(x);
-    // auto a = pow(x, 3);
-    // auto a = pown(x, 4.0);
-    // auto a = pow(x, 4.0);
-    // auto a = pow(x, y);
-    // auto a = atan2(y, x);
-    // auto a = atan2(y, 2.0);
-    // auto a = atan2(2.0, x);
-    // auto a = max(x, y);
-    // auto a = min(x, y);
-    // auto a = hull(x, y);
+    auto a = x;
+
+    // Currently supported functions:
+    a = -x;
+    a = x + y;
+    a = x - y;
+    a = x / y;
+    a = x * y;
+    a = sqr(x);
+    a = sqrt(x);
+    a = cbrt(x);
+    // a = abs(x);
+    a = exp(x);
+    a = log(x);
+    a = log2(x);
+    a = log10(x);
+    a = pown(x, 4);
+    a = pow(x, 3);
+    a = pow(x, 4.0f);
+    a = pow(x, T(4.0));
+    a = pow(x, y);
+    a = recip(x);
+    a = sin(x);
+    a = cos(x);
+    a = tan(x);
+    a = asin(x);
+    a = atan(x);
+    a = atan2(y, x);
+    a = atan2(y, T(2.0));
+    a = atan2(T(2.0), x);
+    a = sinh(x);
+    a = cosh(x);
+    a = asinh(x);
+    a = acosh(x);
+    a = atanh(x);
+    a = erf(x);
+    a = erfc(x);
+    // a = max(x, y);
+    // a = min(x, y);
+    a = ceil(x);
+    a = floor(x);
+    a = trunc(x);
+    a = round(x);
+    a = nearbyint(x);
+    a = rint(x);
+
+    // int dummy;
+    // a = remquo(x, y, &dummy);
+    // a = hull(x, y);
+
+    if (isinf(x) || isfinite(x)) {
+        a = 2 * a;
+    }
+
     return a;
 }
 
+template<typename T>
 __global__ void kernel(T *xs, T *ys, T *res, int n)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -58,7 +80,8 @@ __global__ void kernel(T *xs, T *ys, T *res, int n)
     }
 }
 
-int main()
+template<typename T>
+void test_all_ops()
 {
     constexpr int n = 1;
     T xs[n], ys[n], res[n];
@@ -90,6 +113,14 @@ int main()
     CUDA_CHECK(cudaFree(d_xs));
     CUDA_CHECK(cudaFree(d_ys));
     CUDA_CHECK(cudaFree(d_res));
+}
+
+int main()
+{
+    using cu::interval, cu::tangent;
+
+    test_all_ops<tangent<interval<float>>>();
+    test_all_ops<tangent<interval<double>>>();
 
     return 0;
 }
