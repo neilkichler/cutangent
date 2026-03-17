@@ -279,7 +279,7 @@ fn tangent<T> recip(tangent<T> x)
 {
     using std::pow;
 
-    return { 1. / x.v, -x.d / pow(x.v, 2) };
+    return { T(1.) / x.v, -x.d / pow(x.v, 2) };
 }
 
 template<typename T>
@@ -468,7 +468,7 @@ fn tangent<T> log1p(tangent<T> x)
 template<typename T>
 fn tangent<T> sqr(tangent<T> x)
 {
-    return { sqr(x.v), 2.0 * x.v * x.d };
+    return { sqr(x.v), T(2.0) * x.v * x.d };
 }
 
 template<typename T>
@@ -478,7 +478,7 @@ fn tangent<T> sqrt(tangent<T> x)
 
     constexpr T zero {};
     // NOTE: We currently do not treat the case where x.v == 0, x.d > 0 to map to +inf.
-    return { sqrt(x.v), x.d / (2.0 * sqrt(x.v) + (x.v == zero ? numeric_limits<T>::min() : zero)) };
+    return { sqrt(x.v), x.d / (T(2.0) * sqrt(x.v) + (x.v == zero ? numeric_limits<T>::min() : zero)) };
 }
 
 template<typename T>
@@ -540,7 +540,7 @@ fn tangent<T> ceil(tangent<T> x)
 {
     using std::ceil;
 
-    return { ceil(x.v), 0.0 };
+    return ceil(x.v);
 }
 
 template<typename T>
@@ -572,7 +572,7 @@ fn tangent<T> floor(tangent<T> x)
 {
     using std::floor;
 
-    return { floor(x.v), 0.0 };
+    return floor(x.v);
 }
 
 template<typename T>
@@ -580,7 +580,7 @@ fn tangent<T> trunc(tangent<T> x)
 {
     using std::trunc;
 
-    return { trunc(x.v), 0.0 };
+    return trunc(x.v);
 }
 
 template<typename T>
@@ -588,7 +588,7 @@ fn tangent<T> round(tangent<T> x)
 {
     using std::round;
 
-    return { round(x.v), 0.0 };
+    return round(x.v);
 }
 
 template<typename T>
@@ -596,15 +596,7 @@ fn tangent<T> nearbyint(tangent<T> x)
 {
     using std::nearbyint;
 
-    return { nearbyint(x.v), 0.0 };
-}
-
-template<typename T>
-fn tangent<T> rint(tangent<T> x)
-{
-    using std::rint;
-
-    return { rint(x.v), 0.0 };
+    return nearbyint(x.v);
 }
 
 template<typename T>
@@ -650,7 +642,7 @@ fn tangent<T> remquo(tangent<T> x, tangent<T> y, int *quo)
 {
     using std::remquo;
 
-    return { remquo(x.v, y.v, quo), 0.0 };
+    return remquo(x.v, y.v, quo);
 }
 
 template<typename T>
@@ -728,15 +720,15 @@ fn bool islessgreater(tangent<T> x, tangent<T> y)
 }
 
 template<typename T>
-fn T midpoint(T x, T y)
+fn tangent<T> midpoint(tangent<T> x, tangent<T> y)
 {
     using std::midpoint;
 
-    return { midpoint(x.v, y.v), x.v / 2.0 + y.v / 2.0 };
+    return { midpoint(x.v, y.v), x.v / T(2.) + y.v / T(2.) };
 }
 
 template<typename T>
-fn T lerp(T a, T b, T t)
+fn tangent<T> lerp(tangent<T> a, tangent<T> b, tangent<T> t)
 {
     using std::lerp;
 
@@ -744,7 +736,7 @@ fn T lerp(T a, T b, T t)
 }
 
 template<typename T>
-fn T lerp(T a, T b, arithmetic auto t)
+fn tangent<T> lerp(tangent<T> a, tangent<T> b, arithmetic auto t)
 {
     using std::lerp;
 
