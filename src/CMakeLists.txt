@@ -8,6 +8,7 @@ set(headers
     "${LIB_PATH}/tangent.h"
     "${LIB_PATH}/format.h"
     "${LIB_PATH}/limits.h"
+    "${LIB_PATH}/numbers.h"
 )
 
 add_library(cutangent "main.cu" ${headers})
