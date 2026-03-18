@@ -55,6 +55,7 @@ constexpr auto f(int out_i, auto x, auto y)
     vs[i++] = hypot(x, y);
     vs[i++] = erf(x);
     vs[i++] = erfc(x);
+    vs[i++] = copysign(x, -1.0);
     vs[i++] = midpoint(x, y);
     vs[i++] = lerp(x, y, y);
     vs[i++] = lerp(x, y, 0.5);

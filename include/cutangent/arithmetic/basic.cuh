@@ -249,7 +249,7 @@ fn tangent<T> abs(tangent<T> x)
 
     constexpr T zero {};
     T v = x.v == zero ? x.d : x.v;
-    return { abs(x.v), copysign(1.0, v) * x.d };
+    return { abs(x.v), copysign(1.f, v) * x.d };
 }
 
 template<typename T>
@@ -259,7 +259,7 @@ fn tangent<T> fabs(tangent<T> x)
 
     constexpr T zero {};
     T v = x.v == zero ? x.d : x.v;
-    return { fabs(x.v), copysign(1.0, v) * x.d };
+    return { fabs(x.v), copysign(1.f, v) * x.d };
 }
 
 template<typename T>
@@ -653,10 +653,12 @@ fn bool signbit(tangent<T> x)
     return signbit(x.v);
 }
 
-template<typename T>
-fn tangent<T> copysign(tangent<T> mag, T sgn)
+template<typename T, typename U>
+fn tangent<T> copysign(tangent<T> mag, U sgn)
 {
     using std::copysign;
+
+    static_assert(arithmetic<U> or std::same_as<T, U>);
 
     return { copysign(mag.v, sgn), copysign(mag.d, sgn) };
 }

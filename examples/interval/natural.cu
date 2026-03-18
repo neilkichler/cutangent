@@ -25,7 +25,7 @@ constexpr auto f(auto x, auto y)
     a = sqr(x);
     a = sqrt(x);
     a = cbrt(x);
-    // a = abs(x);
+    a = abs(x);
     a = exp(x);
     a = log(x);
     a = log2(x);
@@ -51,20 +51,19 @@ constexpr auto f(auto x, auto y)
     a = atanh(x);
     a = erf(x);
     a = erfc(x);
-    // a = max(x, y);
-    // a = min(x, y);
+    a = max(x, y);
+    a = min(x, y);
+    a = clamp(x, y, y);
+    a = mid(x, y, y);
     a = ceil(x);
     a = floor(x);
     a = trunc(x);
     a = round(x);
     a = nearbyint(x);
     a = rint(x);
+    a = copysign(x, -1.f);
 
-    // int dummy;
-    // a = remquo(x, y, &dummy);
-    // a = hull(x, y);
-
-    if (isinf(x) || isfinite(x)) {
+    if (isinf(x) || isfinite(x) || isnan(x)) {
         a = 2 * a;
     }
 
