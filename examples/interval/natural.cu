@@ -19,9 +19,17 @@ constexpr auto f(auto x, auto y)
     // Currently supported functions:
     a = -x;
     a = x + y;
+    a = value(x) + y;
+    a = x + value(y);
     a = x - y;
-    a = x / y;
+    a = value(x) - y;
+    a = x - value(y);
     a = x * y;
+    a = value(x) * y;
+    a = x * value(y);
+    a = x / y;
+    a = value(x) / y;
+    a = x / value(y);
     a = sqr(x);
     a = sqrt(x);
     a = cbrt(x);
