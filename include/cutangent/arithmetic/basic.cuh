@@ -482,7 +482,16 @@ fn tangent<T> sqrt(tangent<T> x)
 }
 
 template<typename T>
-fn tangent<T> pown(tangent<T> x, auto n)
+fn tangent<T> pow(tangent<T> x, tangent<T> n)
+{
+    using std::pow, std::log;
+
+    return { pow(x.v, n.v),
+             n.v * pow(x.v, n.v - 1) * x.d + pow(x.v, n.v) * log(x.v) * n.d };
+}
+
+template<typename T>
+fn tangent<T> pow(tangent<T> x, auto n)
 {
     using std::pow;
 
@@ -490,7 +499,7 @@ fn tangent<T> pown(tangent<T> x, auto n)
 }
 
 template<typename T>
-fn tangent<T> pown(auto x, tangent<T> n)
+fn tangent<T> pow(auto x, tangent<T> n)
 {
     using std::pow;
 
@@ -498,24 +507,15 @@ fn tangent<T> pown(auto x, tangent<T> n)
 }
 
 template<typename T>
-fn tangent<T> pow(tangent<T> x, auto n)
+fn tangent<T> pown(tangent<T> x, auto n)
 {
-    return pown(x, n);
+    return pow(x, n);
 }
 
 template<typename T>
-fn tangent<T> pow(auto x, tangent<T> n)
+fn tangent<T> pown(auto x, tangent<T> n)
 {
-    return pown(x, n);
-}
-
-template<typename T>
-fn tangent<T> pow(tangent<T> x, tangent<T> n)
-{
-    using std::pow, std::log;
-
-    return { pow(x.v, n.v),
-             n.v * pow(x.v, n.v - 1) * x.d + pow(x.v, n.v) * log(x.v) * n.d };
+    return pow(x, n);
 }
 
 template<typename T>
