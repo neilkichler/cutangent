@@ -19,6 +19,12 @@ concept arithmetic = std::is_arithmetic_v<T>;
 #define fn inline constexpr __device__
 
 template<typename T>
+fn tangent<T> operator+(tangent<T> x)
+{
+    return x;
+}
+
+template<typename T>
 fn tangent<T> operator-(tangent<T> x)
 {
     return { -x.v, -x.d };
