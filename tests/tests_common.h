@@ -1,42 +1,79 @@
-#ifndef CUMCCORMICK_TESTS_COMMON_H
-#define CUMCCORMICK_TESTS_COMMON_H
+#ifndef CUTANGENT_TESTS_COMMON_H
+#define CUTANGENT_TESTS_COMMON_H
 
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <source_location>
 #include <span>
 
 #include <cuda_runtime.h>
 
-static constexpr std::size_t n_streams = 4;
-
-using cuda_streams = std::span<cudaStream_t, n_streams>;
-using cuda_events  = std::span<cudaEvent_t, n_streams>;
-
-struct cuda_buffer
+namespace cu::test
 {
-    char *host;
-    char *device;
+
+inline void check(cudaError_t err, const std::source_location &loc = std::source_location::current())
+{
+    if (err != cudaSuccess) {
+        std::fprintf(stderr,
+                     "CUDA error in %s at\n%s:%u: %s (%s=%d)\n",
+                     loc.function_name(),
+                     loc.file_name(),
+                     loc.line(),
+                     cudaGetErrorString(err),
+                     cudaGetErrorName(err),
+                     static_cast<int>(err));
+        std::abort();
+    }
+}
+
+namespace device
+{
+    inline void init(int device = 0, const std::source_location &loc = std::source_location::current())
+    {
+        check(cudaSetDevice(device), loc);
+    }
+
+    inline void reset(const std::source_location &loc = std::source_location::current())
+    {
+        check(cudaDeviceReset(), loc);
+    }
+
+} // namespace device
+
+template<typename T, std::size_t N>
+struct array
+{
+    static constexpr std::size_t n_bytes = N * sizeof(T);
+
+    array(const std::source_location &loc = std::source_location::current())
+    {
+        check(cudaMalloc(reinterpret_cast<void **>(&ptr), n_bytes), loc);
+    }
+    ~array() { check(cudaFree(ptr)); }
+
+    array &operator=(const std::span<T, N> &host)
+    {
+        check(cudaMemcpy(ptr, host.data(), n_bytes, cudaMemcpyHostToDevice));
+        return *this;
+    }
+
+    operator std::array<T, N>() const
+    {
+        std::array<T, N> host {};
+        check(cudaMemcpy(host.data(), ptr, n_bytes, cudaMemcpyDeviceToHost));
+        return host;
+    }
+
+    T operator[](std::size_t i) const { return ptr[i]; }
+
+    T *data() { return ptr; };
+    const T *data() const { return ptr; };
+
+private:
+    T *ptr;
 };
 
-using cuda_buffers = std::span<cuda_buffer, n_streams>;
+} // namespace cu::test
 
-struct cuda_ctx
-{
-    cuda_buffers buffers;
-    cuda_streams streams;
-    cuda_events events;
-};
-
-#define CUDA_CHECK(x)                                                                \
-    do {                                                                             \
-        cudaError_t err = x;                                                         \
-        if (err != cudaSuccess) {                                                    \
-            fprintf(stderr, "CUDA error in %s at %s:%d: %s (%s=%d)\n", __FUNCTION__, \
-                    __FILE__, __LINE__, cudaGetErrorString(err),                     \
-                    cudaGetErrorName(err), err);                                     \
-            abort();                                                                 \
-        }                                                                            \
-    } while (0)
-
-#endif // CUMCCORMICK_TESTS_COMMON_H
+#endif // CUTANGENT_TESTS_COMMON_H

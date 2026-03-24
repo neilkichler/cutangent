@@ -478,6 +478,17 @@ fn tangent<T> sqr(tangent<T> x)
 }
 
 template<typename T>
+fn T sqr(T x)
+{
+    if constexpr (arithmetic<T>) {
+        return x * x;
+    } else {
+        using cu::sqr;
+        return sqr(x); // might want to use specialized square function (e.g., for interval arithmetic)
+    }
+}
+
+template<typename T>
 fn tangent<T> sqrt(tangent<T> x)
 {
     using std::sqrt, std::numeric_limits;

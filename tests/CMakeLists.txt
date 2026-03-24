@@ -12,6 +12,7 @@ FetchContent_MakeAvailable(ut)
 # Tests need to be added as executables first
 add_executable(tests 
     tests.cpp
+    tests_against_finite_differences.cu
 )
 
 # Use C++20 in the tests
@@ -25,6 +26,12 @@ set_target_properties(tests PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Link with main library and testing library
 target_link_libraries(tests PRIVATE cutangent ut warnings)
+
+# Better constexpr support
+target_compile_options(tests PRIVATE "$<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:--expt-relaxed-constexpr>")
+
+# Better lambda support
+target_compile_options(tests PRIVATE "$<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:--expt-extended-lambda>")
 
 # Find and link with CUDA headers
 find_package(CUDAToolkit REQUIRED)
