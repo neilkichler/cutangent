@@ -15,8 +15,7 @@ add_executable(tests
 )
 
 # Use C++20 in the tests
-target_compile_features(tests PRIVATE cxx_std_20)
-target_compile_features(tests PRIVATE cuda_std_20)
+target_compile_features(tests PRIVATE cxx_std_20 cuda_std_20)
 
 # Specify the CUDA architecture to compile to
 set_target_properties(tests PROPERTIES CUDA_ARCHITECTURES native)
