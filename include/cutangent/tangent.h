@@ -58,7 +58,7 @@ constexpr const T &value(const tangent<T> &x)
 }
 
 template<typename T>
-constexpr T value(tangent<T> &&x)
+constexpr decltype(auto) value(tangent<T> &&x)
 {
     return std::move(x.v);
 }
