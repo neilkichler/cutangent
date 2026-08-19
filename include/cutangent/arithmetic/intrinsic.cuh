@@ -73,6 +73,31 @@ namespace cu::intrinsic
     template<> inline __device__ tangent<double> next_floating(tangent<double> x) { return { nextafter(x.v, pos_inf<tangent<double>>().v), nextafter(x.d, pos_inf<tangent<double>>().d) }; }
     template<> inline __device__ tangent<double> prev_floating(tangent<double> x) { return { nextafter(x.v, neg_inf<tangent<double>>().v), nextafter(x.d, neg_inf<tangent<double>>().d) }; }
 
+    template<typename T>
+    inline __device__ tangent<T> fma_down(tangent<T> x, tangent<T> y, tangent<T> z)
+    {
+        return { fma_down(x.v, y.v, z.v), fma_down(x.v, y.d, fma_down(x.d, y.v, z.d)) };
+    }
+
+    template<typename T>
+    inline __device__ tangent<T> fma_up(tangent<T> x, tangent<T> y, tangent<T> z)
+    {
+        return { fma_up(x.v, y.v, z.v), fma_up(x.v, y.d, fma_up(x.d, y.v, z.d)) };
+    }
+
+    template<typename T> inline __device__ tangent<T> add_down  (tangent<T> x, tangent<T> y) { return x + y; }
+    template<typename T> inline __device__ tangent<T> add_up    (tangent<T> x, tangent<T> y) { return x + y; }
+    template<typename T> inline __device__ tangent<T> sub_down  (tangent<T> x, tangent<T> y) { return x - y; }
+    template<typename T> inline __device__ tangent<T> sub_up    (tangent<T> x, tangent<T> y) { return x - y; }
+    template<typename T> inline __device__ tangent<T> mul_down  (tangent<T> x, tangent<T> y) { return x * y; }
+    template<typename T> inline __device__ tangent<T> mul_up    (tangent<T> x, tangent<T> y) { return x * y; }
+    template<typename T> inline __device__ tangent<T> div_down  (tangent<T> x, tangent<T> y) { return x / y; }
+    template<typename T> inline __device__ tangent<T> div_up    (tangent<T> x, tangent<T> y) { return x / y; }
+    template<typename T> inline __device__ tangent<T> rcp_down  (tangent<T> x)               { return recip(x); }
+    template<typename T> inline __device__ tangent<T> rcp_up    (tangent<T> x)               { return recip(x); }
+    template<typename T> inline __device__ tangent<T> sqrt_down (tangent<T> x)               { return sqrt(x); }
+    template<typename T> inline __device__ tangent<T> sqrt_up   (tangent<T> x)               { return sqrt(x); }
+
 #define fn(T) template<typename T> inline constexpr __device__ auto
 
     fn(T) add_down(const T &x, typename T::value_type y) -> T { return { add_down(x.v, y), x.d }; }
