@@ -181,7 +181,7 @@ fn tangent<T> &operator/=(tangent<T> &a, auto b)
 template<typename T>
 fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
-    using std::max;
+    using std::max, std::min;
 
     T delta = a.v - b.v;
     if (delta < 0.0) {
@@ -190,7 +190,15 @@ fn tangent<T> max(tangent<T> a, tangent<T> b)
         return { a.v, a.d };
     } else {
         // many elements of the subdifferential could be chosen
-        return { a.v, max(a.d, b.d) };
+
+        // NOTE: value part needs to also be max to be consistent for other arithmetic overloads (e.g., interval arithmetic)
+        if constexpr (requires { hull(a.d, b.d); }) {
+            // specialization for arithmetic that has hull operation
+            return { max(a.v, b.v), hull(a.d, b.d) };
+        } else {
+            // standard floating point case
+            return { a.v, max(a.d, b.d) };
+        }
     }
 }
 
@@ -213,7 +221,7 @@ fn tangent<T> fmax(tangent<T> a, tangent<T> b)
 template<typename T>
 fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
-    using std::min;
+    using std::max, std::min;
 
     T delta = a.v - b.v;
     if (delta < 0.0) {
@@ -222,7 +230,15 @@ fn tangent<T> min(tangent<T> a, tangent<T> b)
         return { b.v, b.d };
     } else {
         // many elements of the subdifferential could be chosen
-        return { b.v, min(a.d, b.d) };
+
+        // NOTE: value part needs to also be min to be consistent for other arithmetic overloads (e.g., interval arithmetic)
+        if constexpr (requires { hull(a.d, b.d); }) {
+            // specialization for arithmetic that has hull operation
+            return { min(a.v, b.v), hull(a.d, b.d) };
+        } else {
+            // standard floating point case
+            return { b.v, min(a.d, b.d) };
+        }
     }
 }
 
