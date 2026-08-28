@@ -1,8 +1,8 @@
 #ifndef CUTANGENT_ARITHMETIC_INTRINSIC_CUH
 #define CUTANGENT_ARITHMETIC_INTRINSIC_CUH
 
-#include <cutangent/arithmetic/intrinsics_api.h>
 #include <cutangent/arithmetic/basic.cuh>
+#include <cutangent/arithmetic/intrinsics_api.h>
 #include <cutangent/tangent.h>
 #include <cutangent/traits.h>
 
@@ -49,29 +49,33 @@ struct intrinsics<tangent<T>>
     static __device__ tangent<T> prev_floating(X x) { return { nextafter(x.v, -std::numeric_limits<T>::infinity()), nextafter(x.d, std::numeric_limits<T>::infinity()) }; }
 };
 
-}; // namespace cu
-
-namespace cu::intrinsic
+template<numeric T>
+struct intrinsics<tangent<T>, T>
 {
+    using i = intrinsics<T>;
 
-#define fn(T) template<numeric T> inline __device__ auto
+    static __device__ tangent<T> add_down(tangent<T> x, T y) { return { i::add_down(x.v, y), x.d }; }
+    static __device__ tangent<T> add_up  (tangent<T> x, T y) { return { i::add_up  (x.v, y), x.d }; }
+    static __device__ tangent<T> sub_down(tangent<T> x, T y) { return { i::sub_down(x.v, y), x.d }; }
+    static __device__ tangent<T> sub_up  (tangent<T> x, T y) { return { i::sub_up  (x.v, y), x.d }; }
+    static __device__ tangent<T> mul_down(tangent<T> x, T y) { return { i::mul_down(x.v, y), i::mul_down(x.d, y) }; }
+    static __device__ tangent<T> mul_up  (tangent<T> x, T y) { return { i::mul_up  (x.v, y), i::mul_up  (x.d, y) }; }
+};
 
-    fn(T) add_down(const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::add_down(x.v, y), x.d }; }
-    fn(T) add_down(typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::add_down(x, y.v), y.d }; }
-    fn(T) add_up  (const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::add_up(x.v, y), x.d }; }
-    fn(T) add_up  (typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::add_up(x, y.v), y.d }; }
-    fn(T) sub_down(const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::sub_down(x.v, y), x.d }; }
-    fn(T) sub_down(typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::sub_down(x, y.v), y.d }; }
-    fn(T) sub_up  (const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::sub_up(x.v, y), x.d }; }
-    fn(T) sub_up  (typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::sub_up(x, y.v), y.d }; }
-    fn(T) mul_down(const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::mul_down(x.v, y), cu::intrinsics<typename T::value_type>::mul_down(x.d, y) }; }
-    fn(T) mul_down(typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::mul_down(x, y.v), cu::intrinsics<typename T::value_type>::mul_down(x, y.d) }; }
-    fn(T) mul_up  (const T &x, typename T::value_type y) -> T { return { cu::intrinsics<typename T::value_type>::mul_up(x.v, y), cu::intrinsics<typename T::value_type>::mul_up(x.d, y) }; }
-    fn(T) mul_up  (typename T::value_type x, const T &y) -> T { return { cu::intrinsics<typename T::value_type>::mul_up(x, y.v), cu::intrinsics<typename T::value_type>::mul_up(x, y.d) }; }
+template<numeric T>
+struct intrinsics<T, tangent<T>>
+{
+    using i = intrinsics<T>;
 
-#undef fn
+    static __device__ tangent<T> add_down(T x, tangent<T> y) { return { i::add_down(x, y.v), y.d }; }
+    static __device__ tangent<T> add_up  (T x, tangent<T> y) { return { i::add_up  (x, y.v), y.d }; }
+    static __device__ tangent<T> sub_down(T x, tangent<T> y) { return { i::sub_down(x, y.v), y.d }; }
+    static __device__ tangent<T> sub_up  (T x, tangent<T> y) { return { i::sub_up  (x, y.v), y.d }; }
+    static __device__ tangent<T> mul_down(T x, tangent<T> y) { return { i::mul_down(x, y.v), i::mul_down(x, y.d) }; }
+    static __device__ tangent<T> mul_up  (T x, tangent<T> y) { return { i::mul_up  (x, y.v), i::mul_up  (x, y.d) }; }
+};
 
 // clang-format on
-} // namespace cu::intrinsic
+}; // namespace cu
 
 #endif // CUTANGENT_ARITHMETIC_INTRINSIC_CUH
