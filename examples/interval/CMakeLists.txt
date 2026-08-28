@@ -2,7 +2,7 @@ include(FetchContent)
 FetchContent_Declare(
   cuinterval
   GIT_REPOSITORY https://github.com/neilkichler/cuinterval.git
-  GIT_TAG main
+  GIT_TAG v0.5.1
 )
 FetchContent_MakeAvailable(cuinterval)
 
