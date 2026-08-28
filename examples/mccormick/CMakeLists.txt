@@ -2,7 +2,7 @@ include(FetchContent)
 FetchContent_Declare(
   cumccormick
   GIT_REPOSITORY https://github.com/neilkichler/cumccormick.git
-  GIT_TAG v0.2.1
+  GIT_TAG main
 )
 FetchContent_MakeAvailable(cumccormick)
 

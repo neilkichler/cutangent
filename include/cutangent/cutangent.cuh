@@ -6,5 +6,6 @@
 #include <cutangent/limits.h>
 #include <cutangent/numbers.h>
 #include <cutangent/tangent.h>
+#include <cutangent/traits.h>
 
 #endif // CUTANGENT_CUH
