@@ -1,5 +1,5 @@
-#ifndef CUTANGENT_ARITHMETIC_BASIC_CUH
-#define CUTANGENT_ARITHMETIC_BASIC_CUH
+#ifndef CUTANGENT_ARITHMETIC_OPERATIONS_CUH
+#define CUTANGENT_ARITHMETIC_OPERATIONS_CUH
 
 #include <cutangent/tangent.h>
 
@@ -782,4 +782,4 @@ fn tangent<T> lerp(tangent<T> a, tangent<T> b, arithmetic auto t)
 
 } // namespace cu
 
-#endif // CUTANGENT_ARITHMETIC_BASIC_CUH
+#endif // CUTANGENT_ARITHMETIC_OPERATIONS_CUH

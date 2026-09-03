@@ -1,8 +1,8 @@
-#ifndef CUTANGENT_ARITHMETIC_INTRINSIC_CUH
-#define CUTANGENT_ARITHMETIC_INTRINSIC_CUH
+#ifndef CUTANGENT_ARITHMETIC_INTRINSICS_CUH
+#define CUTANGENT_ARITHMETIC_INTRINSICS_CUH
 
-#include <cutangent/arithmetic/basic.cuh>
 #include <cutangent/arithmetic/intrinsics_api.h>
+#include <cutangent/arithmetic/operations.cuh>
 #include <cutangent/tangent.h>
 #include <cutangent/traits.h>
 
@@ -82,4 +82,4 @@ struct intrinsics<T, tangent<T>>
 // clang-format on
 }; // namespace cu
 
-#endif // CUTANGENT_ARITHMETIC_INTRINSIC_CUH
+#endif // CUTANGENT_ARITHMETIC_INTRINSICS_CUH
