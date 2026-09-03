@@ -60,6 +60,8 @@ struct intrinsics<tangent<T>, T>
     static __device__ tangent<T> sub_up  (tangent<T> x, T y) { return { i::sub_up  (x.v, y), x.d }; }
     static __device__ tangent<T> mul_down(tangent<T> x, T y) { return { i::mul_down(x.v, y), i::mul_down(x.d, y) }; }
     static __device__ tangent<T> mul_up  (tangent<T> x, T y) { return { i::mul_up  (x.v, y), i::mul_up  (x.d, y) }; }
+    static __device__ tangent<T> div_down(tangent<T> x, T y) { return { i::div_down(x.v, y), i::div_down(x.d, y) }; }
+    static __device__ tangent<T> div_up  (tangent<T> x, T y) { return { i::div_up  (x.v, y), i::div_up  (x.d, y) }; }
 };
 
 template<numeric T>
@@ -73,6 +75,8 @@ struct intrinsics<T, tangent<T>>
     static __device__ tangent<T> sub_up  (T x, tangent<T> y) { return { i::sub_up  (x, y.v), y.d }; }
     static __device__ tangent<T> mul_down(T x, tangent<T> y) { return { i::mul_down(x, y.v), i::mul_down(x, y.d) }; }
     static __device__ tangent<T> mul_up  (T x, tangent<T> y) { return { i::mul_up  (x, y.v), i::mul_up  (x, y.d) }; }
+    static __device__ tangent<T> div_down(T x, tangent<T> y) { return { i::div_down(x, y.v), i::div_down(x, y.d) }; }
+    static __device__ tangent<T> div_up  (T x, tangent<T> y) { return { i::div_up  (x, y.v), i::div_up  (x, y.d) }; }
 };
 
 // clang-format on
