@@ -181,7 +181,7 @@ fn tangent<T> &operator/=(tangent<T> &a, auto b)
 template<typename T>
 fn tangent<T> max(tangent<T> a, tangent<T> b)
 {
-    using std::max, std::min;
+    using std::max;
 
     T delta = a.v - b.v;
     if (delta < 0.0) {
@@ -229,7 +229,7 @@ fn tangent<T> fmax(tangent<T> a, tangent<T> b)
 template<typename T>
 fn tangent<T> min(tangent<T> a, tangent<T> b)
 {
-    using std::max, std::min;
+    using std::min;
 
     T delta = a.v - b.v;
     if (delta < 0.0) {
