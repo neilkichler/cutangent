@@ -80,7 +80,7 @@ cmake --install build
 
 #### [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
 ```cmake
-CPMAddPackage("gh:neilkichler/cutangent@0.4.0")
+CPMAddPackage("gh:neilkichler/cutangent@0.4.1")
 ```
 
 #### [FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)
@@ -89,7 +89,7 @@ include(FetchContent)
 FetchContent_Declare(
   cutangent
   GIT_REPOSITORY https://github.com/neilkichler/cutangent.git
-  GIT_TAG v0.4.0
+  GIT_TAG v0.4.1
 )
 FetchContent_MakeAvailable(cutangent)
 ```
