@@ -214,7 +214,15 @@ fn tangent<T> fmax(tangent<T> a, tangent<T> b)
         return { a.v, a.d };
     } else {
         // many elements of the subdifferential could be chosen
-        return { a.v, fmax(a.d, b.d) };
+
+        // NOTE: value part needs to also be fmax to be consistent for other arithmetic overloads (e.g., interval arithmetic)
+        if constexpr (requires { hull(a.d, b.d); }) {
+            // specialization for arithmetic that has hull operation
+            return { fmax(a.v, b.v), hull(a.d, b.d) };
+        } else {
+            // standard floating point case
+            return { a.v, fmax(a.d, b.d) };
+        }
     }
 }
 
@@ -254,7 +262,15 @@ fn tangent<T> fmin(tangent<T> a, tangent<T> b)
         return { b.v, b.d };
     } else {
         // many elements of the subdifferential could be chosen
-        return { b.v, fmin(a.d, b.d) };
+
+        // NOTE: value part needs to also be min to be consistent for other arithmetic overloads (e.g., interval arithmetic)
+        if constexpr (requires { hull(a.d, b.d); }) {
+            // specialization for arithmetic that has hull operation
+            return { fmin(a.v, b.v), hull(a.d, b.d) };
+        } else {
+            // standard floating point case
+            return { b.v, fmin(a.d, b.d) };
+        }
     }
 }
 
